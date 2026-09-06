@@ -1,16 +1,16 @@
 {
- "facts_new": 3,
- "conventions_new": 1,
+ "facts_new": 2,
+ "conventions_new": 0,
  "skill": {
   "name": "At-Risk Pipeline Report",
-  "status": "promoted",
-  "version": 2
+  "status": "candidate",
+  "version": 1
  },
  "prompt_patch": true,
- "facts_demoted": 1,
- "cost_usd": 0.0053275,
- "latency_s": 8.781769099994563,
+ "facts_demoted": 0,
+ "cost_usd": 0.004397399999999999,
+ "latency_s": 8.67903950001346,
  "model": "gemini-2.5-flash",
- "tokens": 4881,
- "what_went_wrong": ""
+ "tokens": 3856,
+ "what_went_wrong": "The agent only checked 'qualified' and 'negotiation' stages for open deals, missing other stages where at-risk deals might exist, and did not correctly identify risk from notes about security questionnaires."
 }

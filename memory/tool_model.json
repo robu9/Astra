@@ -1,6 +1,28 @@
 {
   "crm.get_deal": {
     "description": "Get one deal by id.",
+    "calls": 3,
+    "ok": 3,
+    "errors": 0,
+    "latency_total": 0.0022,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "crm.get_notes": {
+    "description": "Get notes for a deal. Notes are free text written by sales reps.",
+    "calls": 14,
+    "ok": 14,
+    "errors": 0,
+    "latency_total": 0.0095,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "crm.get_owner": {
+    "description": "Get one owner by id.",
     "calls": 0,
     "ok": 0,
     "errors": 0,
@@ -10,59 +32,40 @@
     "probed": false,
     "shape": null
   },
-  "crm.get_notes": {
-    "description": "Get notes for a deal. Notes are free text written by sales reps.",
-    "calls": 4,
-    "ok": 4,
-    "errors": 0,
-    "latency_total": 0.0026,
-    "error_signatures": {},
-    "conventions": [],
-    "probed": false,
-    "shape": null
-  },
-  "crm.get_owner": {
-    "description": "Get one owner by id.",
-    "calls": 11,
-    "ok": 11,
-    "errors": 0,
-    "latency_total": 0.0105,
-    "error_signatures": {},
-    "conventions": [],
-    "probed": false,
-    "shape": null
-  },
   "crm.list_deals": {
     "description": "List deals. Paginated: pass the returned next_cursor to get the next page. Optional stage filter.",
-    "calls": 23,
-    "ok": 23,
+    "calls": 19,
+    "ok": 19,
     "errors": 0,
-    "latency_total": 0.0425,
+    "latency_total": 0.0153,
     "error_signatures": {},
     "conventions": [
-      "The tool paginates results using 'next_cursor'. To get all items, calls must be made repeatedly, passing the 'next_cursor' value as the 'cursor' argument until 'next_cursor' is null.",
-      "The `list_deals` tool requires pagination by passing the `next_cursor` value from the previous response as the `cursor` argument until `next_cursor` is null."
+      "This tool paginates results using a 'next_cursor' field. To get all items, calls must be made repeatedly, passing the 'next_cursor' value as the 'cursor' argument, until 'next_cursor' is null.",
+      "The 'stage' argument accepts values like 'qualified' and 'negotiation'. The response includes a 'next_cursor' field for pagination, even if null for a given call.",
+      "The tool paginates using 'next_cursor'; continue calling with the 'cursor' argument until 'next_cursor' is null to retrieve all items."
     ],
     "probed": true,
     "shape": "object keys=['items', 'next_cursor', 'total']; items[0] keys=['amount', 'company', 'currency', 'health', 'id', 'owner', 'stage']"
   },
   "crm.list_owners": {
     "description": "List deal owners (sales reps).",
-    "calls": 1,
-    "ok": 1,
+    "calls": 5,
+    "ok": 5,
     "errors": 0,
-    "latency_total": 0.0008,
+    "latency_total": 0.0041,
     "error_signatures": {},
-    "conventions": [],
+    "conventions": [
+      "Returns a list of owner objects, each with 'id' and 'name' fields, which can be used to create a lookup map for owner IDs."
+    ],
     "probed": true,
     "shape": "object keys=['owners']"
   },
   "tracker.add_label": {
     "description": "Add a label to an issue. Label must exist (see list_labels).",
-    "calls": 27,
-    "ok": 27,
+    "calls": 35,
+    "ok": 35,
     "errors": 0,
-    "latency_total": 0.0199,
+    "latency_total": 0.0267,
     "error_signatures": {},
     "conventions": [],
     "probed": false,
@@ -70,10 +73,10 @@
   },
   "tracker.assign_issue": {
     "description": "Assign an issue to a member by member_id (m_XX).",
-    "calls": 25,
-    "ok": 25,
+    "calls": 41,
+    "ok": 41,
     "errors": 0,
-    "latency_total": 0.0185,
+    "latency_total": 0.0312,
     "error_signatures": {},
     "conventions": [],
     "probed": false,
@@ -106,11 +109,11 @@
     "calls": 12,
     "ok": 12,
     "errors": 0,
-    "latency_total": 0.0091,
+    "latency_total": 0.0107,
     "error_signatures": {},
     "conventions": [
-      "The tool paginates results using a 'cursor' field. The 'next_cursor' field in the response indicates if more items are available and should be passed back as 'cursor' in subsequent calls until 'next_cursor' is null.",
-      "The tool paginates results using a 'cursor' field. The 'next_cursor' field in the response should be passed back as 'cursor' in subsequent calls until 'next_cursor' is null."
+      "The tool paginates using a 'cursor' field. Continue calling with the 'next_cursor' value until it is null to retrieve all items.",
+      "The `list_issues` tool paginates results using a `cursor` field. The `next_cursor` in the response should be passed as the `cursor` argument in subsequent calls until `next_cursor` is null."
     ],
     "probed": true,
     "shape": "object keys=['items', 'next_cursor']; items[0] keys=['assignee', 'id', 'labels', 'reporter', 'status', 'title']"
@@ -120,7 +123,7 @@
     "calls": 6,
     "ok": 6,
     "errors": 0,
-    "latency_total": 0.0042,
+    "latency_total": 0.0041,
     "error_signatures": {},
     "conventions": [],
     "probed": true,
@@ -131,7 +134,7 @@
     "calls": 6,
     "ok": 6,
     "errors": 0,
-    "latency_total": 0.0031,
+    "latency_total": 0.0059,
     "error_signatures": {},
     "conventions": [],
     "probed": true,

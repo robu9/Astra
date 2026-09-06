@@ -1,16 +1,12 @@
 {
  "facts_new": 2,
- "conventions_new": 0,
- "skill": {
-  "name": "At-Risk Pipeline Report",
-  "status": "candidate",
-  "version": 1
- },
+ "conventions_new": 2,
+ "skill": null,
  "prompt_patch": true,
  "facts_demoted": 0,
- "cost_usd": 0.0047637,
- "latency_s": 8.29891559999669,
+ "cost_usd": 0.0046256000000000005,
+ "latency_s": 9.009580100013409,
  "model": "gemini-2.5-flash",
- "tokens": 3999,
- "what_went_wrong": "The agent missed several at-risk deals because it relied solely on the 'health' field, which is not the only indicator for 'at risk' status."
+ "tokens": 3458,
+ "what_went_wrong": "The agent failed to call 'crm.get_deal' or 'crm.get_notes' for deals not marked 'Red' by default, missing several at-risk deals."
 }

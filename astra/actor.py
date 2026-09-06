@@ -143,9 +143,16 @@ class Actor:
         self.gateway.new_run()
 
         system = SYSTEM + f"\nMODE: {budget.mode} ({budget.reason}). Step budget: {budget.max_steps}.\n"
+        explore = ""
+        never_used = [q for q in self.gateway.specs if self.memory.tool_model.get(q)["calls"] == 0]
+        failed_before = any(e.get("quality", 1.0) < 0.9 for e in mem["episodes"])
+        if never_used and failed_before:
+            explore = ("\n\nEXPLORE: earlier runs on this task were marked partly wrong and these tools have NEVER been called: "
+                       + ", ".join(never_used) + ". Information that explains the wrong records is probably in one of them. "
+                       "Call at least one on the records you are unsure about before deciding.")
         user = (f"TASK:\n{task}\n\nANSWER SCHEMA (return exactly this shape in 'final'):\n"
                 f"{json.dumps(answer_schema, indent=1)}\n\nTOOLS:\n{self.gateway.tool_prompt()}\n\n"
-                f"MEMORY:\n{_memory_block(mem)}")
+                f"MEMORY:\n{_memory_block(mem)}{explore}")
         messages = [{"system_hidden": True, "role": "system", "content": system},
                     {"role": "user", "content": user}]
         messages = [{k: v for k, v in m.items() if k != "system_hidden"} for m in messages]

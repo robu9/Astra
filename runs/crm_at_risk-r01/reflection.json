@@ -1,12 +1,12 @@
 {
- "facts_new": 3,
+ "facts_new": 4,
  "conventions_new": 1,
  "skill": null,
  "prompt_patch": true,
  "facts_demoted": 0,
- "cost_usd": 0.0049252,
- "latency_s": 10.293222300009802,
+ "cost_usd": 0.0050755,
+ "latency_s": 9.213491100003012,
  "model": "gemini-2.5-flash",
- "tokens": 3584,
- "what_went_wrong": "The agent failed to identify 'at-risk' deals because it did not correctly interpret the 'health' field and did not filter by 'stage' to only include open deals."
+ "tokens": 3799,
+ "what_went_wrong": "The agent failed to identify all at-risk deals and did not resolve owner IDs to names."
 }

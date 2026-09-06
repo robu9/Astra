@@ -1,16 +1,16 @@
 {
- "facts_new": 4,
+ "facts_new": 5,
  "conventions_new": 1,
  "skill": {
-  "name": "Triage Open Issues",
+  "name": "Triage Issues",
   "status": "candidate",
   "version": 1
  },
  "prompt_patch": true,
  "facts_demoted": 0,
- "cost_usd": 0.0059318,
- "latency_s": 10.534629500005394,
+ "cost_usd": 0.0056824,
+ "latency_s": 9.987703099992359,
  "model": "gemini-2.5-flash",
- "tokens": 4974,
- "what_went_wrong": "The agent incorrectly assigned the priority label and owner for issue #106, which was a production outage."
+ "tokens": 4986,
+ "what_went_wrong": "The actor incorrectly applied priority labels for most issues and made one incorrect assignee choice, indicating a misunderstanding of the rules for severity and ownership."
 }

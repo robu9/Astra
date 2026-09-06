@@ -8,39 +8,44 @@
    {
     "deal_id": "d_0503",
     "owner": "Tom Okafor",
-    "reason": "Red health"
+    "reason": "Health is Red"
    },
    {
     "deal_id": "d_0508",
-    "owner": "UNASSIGNED",
-    "reason": "Red health"
+    "owner": "Liam Byrne",
+    "reason": "Health is Red"
+   },
+   {
+    "deal_id": "d_0504",
+    "owner": "Liam Byrne",
+    "reason": "budget freeze"
+   },
+   {
+    "deal_id": "d_0507",
+    "owner": "Priya Rao",
+    "reason": "security questionnaire"
    },
    {
     "deal_id": "d_0512",
     "owner": "Ravi Nair",
-    "reason": "Amber health"
-   },
-   {
-    "deal_id": "d_0516",
-    "owner": "UNASSIGNED",
-    "reason": "Amber health"
+    "reason": "security questionnaire"
    }
   ]
  },
- "llm_cost_usd": 0.019306,
- "llm_latency_s": 32.646,
- "tokens": 27488,
+ "llm_cost_usd": 0.027566,
+ "llm_latency_s": 40.051,
+ "tokens": 55835,
  "budget": {
   "model": "gemini-2.5-flash",
-  "tier": "strong",
-  "max_steps": 31,
-  "max_tokens_reply": 5000,
-  "mode": "recovering",
-  "reason": "last run scored poorly; escalating model and step budget",
+  "tier": "fast",
+  "max_steps": 22,
+  "max_tokens_reply": 3000,
+  "mode": "skilled",
+  "reason": "promoted skill v2, 80% tools known, last run succeeded",
   "max_cost_usd": 0.25
  },
  "memory_used": {
-  "facts": 9,
+  "facts": 10,
   "skills": 1,
   "episodes": 3,
   "prompt_patch": true
@@ -48,32 +53,44 @@
  "steps": [
   {
    "idx": 1,
-   "thought": "I need to list all deals first to identify open and at-risk deals. I will use `crm.list_deals` and paginate through all results.",
+   "thought": "I need to get all deal owners to map owner IDs to names later. I will call `crm.list_owners`.",
+   "tool": "crm.list_owners",
+   "args": {},
+   "observation": "{\"owners\": [{\"id\": \"u_01\", \"name\": \"Priya Rao\", \"active\": true}, {\"id\": \"u_02\", \"name\": \"Dan Alvarez\", \"active\": true}, {\"id\": \"u_03\", \"name\": \"Mei Chen\", \"active\": true}, {\"id\": \"u_04\", \"name\": \"Tom Okafor\", \"active\": true}, {\"id\": \"u_05\", \"name\": \"Sara Klein\", \"active\": true}, {\"id\": \"u_06\", \"name\": \"Ravi Nair\", \"active\": true}, {\"id\": \"u_07\", \"name\": \"Ana Souza\", \"active\": false}, {\"id\": \"u_08\", \"name\": \"Liam Byrne\", \"active\": false}]}",
+   "ok": true,
+   "latency_s": 2.1534480999980588,
+   "model": "gemini-2.5-flash",
+   "cost_usd": 0.0009494,
+   "tokens": 1808
+  },
+  {
+   "idx": 2,
+   "thought": "I have the owner list. Now I need to get all deals. I will call `crm.list_deals` to get the first page of deals.",
    "tool": "crm.list_deals",
    "args": {},
    "observation": "{\"items\": [{\"id\": \"d_0501\", \"company\": \"Sirius\", \"stage\": \"proposal\", \"health\": \"G\", \"owner\": \"u_02\", \"currency\": \"USD\", \"amount\": 247000.0}, {\"id\": \"d_0502\", \"company\": \"Pied Piper\", \"stage\": \"closed_lost\", \"health\": \"G\", \"owner\": \"u_08\", \"currency\": \"USD\", \"amount\": 238000.0}, {\"id\": \"d_0503\", \"company\": \"Tyrell\", \"stage\": \"negotiation\", \"health\": \"R\", \"owner\": \"u_04\", \"currency\": \"USD\", \"amount\": 320000.0}, {\"id\": \"d_0504\", \"company\": \"Soylent\", \"stage\": \"qualified\", \"health\": \"G\", \"owner\": \"u_08\", \"currency\": \"USD\", \"amount\": 38000.0}], \"next_cursor\": \"c:4\", \"total\": 17}",
    "ok": true,
-   "latency_s": 4.034255499980645,
+   "latency_s": 1.907378299976699,
    "model": "gemini-2.5-flash",
-   "cost_usd": 0.0019127,
-   "tokens": 2093
+   "cost_usd": 0.0007946,
+   "tokens": 1952
   },
   {
-   "idx": 2,
-   "thought": "I have received the first page of deals. I need to continue paginating using the `next_cursor` until it is null to get all deals.",
+   "idx": 3,
+   "thought": "I have received the first page of deals. The `next_cursor` is `c:4`, which means there are more deals to retrieve. I need to continue calling `crm.list_deals` with the `cursor` argument until `next_cursor` is null to get all deals.",
    "tool": "crm.list_deals",
    "args": {
     "cursor": "c:4"
    },
    "observation": "{\"items\": [{\"id\": \"d_0505\", \"company\": \"Vandelay\", \"stage\": \"closed_won\", \"health\": \"G\", \"owner\": \"u_01\", \"currency\": \"USD\", \"amount\": 221000.0}, {\"id\": \"d_0506\", \"company\": \"Wayne\", \"stage\": \"closed_lost\", \"health\": \"R\", \"owner\": \"u_07\", \"currency\": \"EUR\", \"amount\": 106000.0}, {\"id\": \"d_0507\", \"company\": \"Globex\", \"stage\": \"negotiation\", \"health\": \"G\", \"owner\": \"u_01\", \"currency\": \"EUR\", \"amount\": 53000.0}, {\"id\": \"d_0508\", \"company\": \"Zorg\", \"stage\": \"negotiation\", \"health\": \"R\", \"owner\": \"u_08\", \"currency\": \"EUR\", \"amount\": 95000.0}], \"next_cursor\": \"c:8\", \"total\": 17}",
    "ok": true,
-   "latency_s": 1.9272850000415929,
+   "latency_s": 1.6346419999899808,
    "model": "gemini-2.5-flash",
-   "cost_usd": 0.0007665,
-   "tokens": 1917
+   "cost_usd": 0.0010209,
+   "tokens": 2325
   },
   {
-   "idx": 3,
+   "idx": 4,
    "thought": "",
    "tool": "crm.list_deals",
    "args": {
@@ -81,13 +98,13 @@
    },
    "observation": "{\"items\": [{\"id\": \"d_0509\", \"company\": \"Oscorp\", \"stage\": \"closed_lost\", \"health\": \"A\", \"owner\": \"u_03\", \"currency\": \"USD\", \"amount\": 333000.0}, {\"id\": \"d_0510\", \"company\": \"Gringotts\", \"stage\": \"closed_won\", \"health\": \"A\", \"owner\": \"u_07\", \"currency\": \"USD\", \"amount\": 119000.0}, {\"id\": \"d_0511\", \"company\": \"Umbrella\", \"stage\": \"closed_won\", \"health\": \"R\", \"owner\": \"u_05\", \"currency\": \"EUR\", \"amount\": 6000.0}, {\"id\": \"d_0512\", \"company\": \"Acme\", \"stage\": \"negotiation\", \"health\": \"A\", \"owner\": \"u_06\", \"currency\": \"EUR\", \"amount\": 237000.0}], \"next_cursor\": \"c:12\", \"total\": 17}",
    "ok": true,
-   "latency_s": 1.3235810000333004,
+   "latency_s": 1.9093419999990147,
    "model": "gemini-2.5-flash",
-   "cost_usd": 0.0007767999999999999,
-   "tokens": 2208
+   "cost_usd": 0.0009451999999999999,
+   "tokens": 2608
   },
   {
-   "idx": 4,
+   "idx": 5,
    "thought": "",
    "tool": "crm.list_deals",
    "args": {
@@ -95,13 +112,13 @@
    },
    "observation": "{\"items\": [{\"id\": \"d_0513\", \"company\": \"Wonka\", \"stage\": \"qualified\", \"health\": \"G\", \"owner\": \"u_08\", \"currency\": \"EUR\", \"amount\": 40000.0}, {\"id\": \"d_0514\", \"company\": \"Initech\", \"stage\": \"closed_won\", \"health\": \"G\", \"owner\": \"u_03\", \"currency\": \"USD\", \"amount\": 205000.0}, {\"id\": \"d_0515\", \"company\": \"Massive\", \"stage\": \"closed_won\", \"health\": \"R\", \"owner\": \"u_03\", \"currency\": \"USD\", \"amount\": 385000.0}, {\"id\": \"d_0516\", \"company\": \"Stark\", \"stage\": \"qualified\", \"health\": \"A\", \"owner\": \"u_03\", \"currency\": \"USD\", \"amount\": 352000.0}], \"next_cursor\": \"c:16\", \"total\": 17}",
    "ok": true,
-   "latency_s": 1.4070044999825768,
+   "latency_s": 1.327362300013192,
    "model": "gemini-2.5-flash",
-   "cost_usd": 0.000865,
-   "tokens": 2502
+   "cost_usd": 0.0009784,
+   "tokens": 2880
   },
   {
-   "idx": 5,
+   "idx": 6,
    "thought": "",
    "tool": "crm.list_deals",
    "args": {
@@ -109,89 +126,160 @@
    },
    "observation": "{\"items\": [{\"id\": \"d_0517\", \"company\": \"Dunder\", \"stage\": \"closed_won\", \"health\": \"G\", \"owner\": \"u_02\", \"currency\": \"USD\", \"amount\": 67000.0}], \"next_cursor\": null, \"total\": 17}",
    "ok": true,
-   "latency_s": 1.325039299990749,
+   "latency_s": 1.5880279999983031,
    "model": "gemini-2.5-flash",
-   "cost_usd": 0.0009526000000000001,
-   "tokens": 2794
-  },
-  {
-   "idx": 6,
-   "thought": "",
-   "tool": "crm.get_owner",
-   "args": {
-    "owner_id": "u_04"
-   },
-   "observation": "{\"id\": \"u_04\", \"name\": \"Tom Okafor\", \"active\": true}",
-   "ok": true,
-   "latency_s": 5.656001199997263,
-   "model": "gemini-2.5-flash",
-   "cost_usd": 0.0032511999999999997,
-   "tokens": 3812
+   "cost_usd": 0.0011035,
+   "tokens": 3187
   },
   {
    "idx": 7,
    "thought": "",
-   "tool": "crm.get_owner",
-   "args": {
-    "owner_id": "u_08"
-   },
-   "observation": "{\"id\": \"u_08\", \"name\": \"Liam Byrne\", \"active\": false}",
-   "ok": true,
-   "latency_s": 5.350450300000375,
+   "tool": null,
+   "args": null,
+   "observation": "Malformed reply. Use exactly one of: {\"thought\": \"...\", \"tool\": \"server.tool\", \"args\": {...}} or {\"thought\": \"...\", \"final\": <answer>}. Reply now.\n(raw reply head: '{\"at_risk\": [{\"deal_id\": \"d_0503\", \"owner\": \"Tom Okafor\", \"reason\": \"Health is Red\"}, {\"deal_id\": \"d_0508\", \"owner\": \"Liam Byrne\", \"reason\": \"Health is Red\"}, {\"deal_id\": \"d_0512\", \"owner\": \"Ravi Nair\", \"reason\": \"PO pending\"}]}')",
+   "ok": false,
+   "latency_s": 6.066355699993437,
    "model": "gemini-2.5-flash",
-   "cost_usd": 0.0033242,
-   "tokens": 3894
+   "cost_usd": 0.0037546,
+   "tokens": 4346
   },
   {
    "idx": 8,
-   "thought": "",
-   "tool": "crm.get_owner",
+   "thought": "I have collected all deals and owner information. I've identified deals that are at-risk due to their 'Red' health status. Now I need to check the notes for the remaining OPEN deals (d_0501, d_0504, d_0507, d_0512, d_0513, d_0516) to see if they contain any of the specified risk indicators ('security questionnaire', 'PO pending', 'budget freeze'). I will start with deal `d_0501`.",
+   "tool": "crm.get_notes",
    "args": {
-    "owner_id": "u_06"
+    "deal_id": "d_0501"
    },
-   "observation": "{\"id\": \"u_06\", \"name\": \"Ravi Nair\", \"active\": true}",
+   "observation": "{\"deal_id\": \"d_0501\", \"notes\": [{\"id\": \"n_d_0501_0\", \"text\": \"Legal reviewing MSA\", \"author\": \"u_01\"}, {\"id\": \"n_d_0501_1\", \"text\": \"Demo scheduled next week\", \"author\": \"u_05\"}, {\"id\": \"n_d_0501_2\", \"text\": \"Renewal discussion started\", \"author\": \"u_05\"}]}",
    "ok": true,
-   "latency_s": 5.346431000012672,
+   "latency_s": 3.99793270000373,
    "model": "gemini-2.5-flash",
-   "cost_usd": 0.0035044,
-   "tokens": 4018
+   "cost_usd": 0.0027626,
+   "tokens": 4068
   },
   {
    "idx": 9,
-   "thought": "I have identified all open deals and filtered them based on their 'health' status ('A' or 'R') to determine if they are at risk. I have also retrieved the owner information for these at-risk deals, handling inactive owners by marking them as 'UNASSIGNED'. I have all the necessary information to compile the final report.",
+   "thought": "I have checked the notes for `d_0501`. None of the risk indicators ('security questionnaire', 'PO pending', 'budget freeze') are present. I will proceed to check the notes for the next OPEN deal, `d_0504`.",
+   "tool": "crm.get_notes",
+   "args": {
+    "deal_id": "d_0504"
+   },
+   "observation": "{\"deal_id\": \"d_0504\", \"notes\": [{\"id\": \"n_d_0504_0\", \"text\": \"Legal reviewing MSA\", \"author\": \"u_04\"}, {\"id\": \"n_d_0504_1\", \"text\": \"Budget freeze announced until next quarter\", \"author\": \"u_03\"}, {\"id\": \"n_d_0504_2\", \"text\": \"Renewal discussion started\", \"author\": \"u_05\"}]}",
+   "ok": true,
+   "latency_s": 2.1031301000039093,
+   "model": "gemini-2.5-flash",
+   "cost_usd": 0.001446,
+   "tokens": 3786
+  },
+  {
+   "idx": 10,
+   "thought": "I have checked the notes for `d_0504` and found a 'budget freeze' indicator. I will add this deal to the at-risk list. Now I need to check the notes for the next OPEN deal, `d_0507`.",
+   "tool": "crm.get_notes",
+   "args": {
+    "deal_id": "d_0507"
+   },
+   "observation": "{\"deal_id\": \"d_0507\", \"notes\": [{\"id\": \"n_d_0507_0\", \"text\": \"Follow-up on security questionnaire\", \"author\": \"u_01\"}, {\"id\": \"n_d_0507_1\", \"text\": \"Follow-up on security questionnaire\", \"author\": \"u_04\"}, {\"id\": \"n_d_0507_2\", \"text\": \"Champion is VP Ops\", \"author\": \"u_08\"}, {\"id\": \"n_d_0507_3\", \"text\": \"Customer mentioned a budget freeze\", \"author\": \"u_06\"}]}",
+   "ok": true,
+   "latency_s": 2.088154199998826,
+   "model": "gemini-2.5-flash",
+   "cost_usd": 0.0016508,
+   "tokens": 4058
+  },
+  {
+   "idx": 11,
+   "thought": "I have checked the notes for `d_0507` and found 'security questionnaire' and 'budget freeze' indicators. I will add this deal to the at-risk list with 'security questionnaire' as the reason. Now I need to check the notes for the next OPEN deal, `d_0512`.",
+   "tool": "crm.get_notes",
+   "args": {
+    "deal_id": "d_0512"
+   },
+   "observation": "{\"deal_id\": \"d_0512\", \"notes\": [{\"id\": \"n_d_0512_0\", \"text\": \"Champion is VP Ops\", \"author\": \"u_05\"}, {\"id\": \"n_d_0512_1\", \"text\": \"Demo scheduled next week\", \"author\": \"u_02\"}, {\"id\": \"n_d_0512_2\", \"text\": \"Follow-up on security questionnaire\", \"author\": \"u_05\"}]}",
+   "ok": true,
+   "latency_s": 1.8082749000168405,
+   "model": "gemini-2.5-flash",
+   "cost_usd": 0.0016748,
+   "tokens": 4292
+  },
+  {
+   "idx": 12,
+   "thought": "I have checked the notes for `d_0512` and found a 'security questionnaire' indicator. I will add this deal to the at-risk list. Now I need to check the notes for the next OPEN deal, `d_0513`.",
+   "tool": "crm.get_notes",
+   "args": {
+    "deal_id": "d_0513"
+   },
+   "observation": "{\"deal_id\": \"d_0513\", \"notes\": [{\"id\": \"n_d_0513_0\", \"text\": \"Demo scheduled next week\", \"author\": \"u_03\"}, {\"id\": \"n_d_0513_1\", \"text\": \"Champion is VP Ops\", \"author\": \"u_06\"}]}",
+   "ok": true,
+   "latency_s": 1.9174902999948245,
+   "model": "gemini-2.5-flash",
+   "cost_usd": 0.0016615999999999998,
+   "tokens": 4490
+  },
+  {
+   "idx": 13,
+   "thought": "I have checked the notes for `d_0513`. None of the risk indicators ('security questionnaire', 'PO pending', 'budget freeze') are present. I will proceed to check the notes for the last OPEN deal, `d_0516`.",
+   "tool": "crm.get_notes",
+   "args": {
+    "deal_id": "d_0516"
+   },
+   "observation": "{\"deal_id\": \"d_0516\", \"notes\": [{\"id\": \"n_d_0516_0\", \"text\": \"Legal reviewing MSA\", \"author\": \"u_04\"}, {\"id\": \"n_d_0516_1\", \"text\": \"Renewal discussion started\", \"author\": \"u_01\"}]}",
+   "ok": true,
+   "latency_s": 2.18060069999774,
+   "model": "gemini-2.5-flash",
+   "cost_usd": 0.0017117999999999999,
+   "tokens": 4672
+  },
+  {
+   "idx": 14,
+   "thought": "",
+   "tool": null,
+   "args": null,
+   "observation": "Malformed reply. Use exactly one of: {\"thought\": \"...\", \"tool\": \"server.tool\", \"args\": {...}} or {\"thought\": \"...\", \"final\": <answer>}. Reply now.\n(raw reply head: '{\\n \"at_risk\": [\\n  {\\n   \"deal_id\": \"d_0503\",\\n   \"owner\": \"Tom Okafor\",\\n   \"reason\": \"Health is Red\"\\n  },\\n  {\\n   \"deal_id\": \"d_0508\",\\n   \"owner\": \"Liam Byrne\",\\n   \"reason\": \"Health is Red\"\\n  },\\n  {\\n   \"deal_id\": \"d_0504\",\\n   \"owner\": \"Liam Byrne\",\\n   \"reason\": \"budget freeze\"\\n  },\\n  {\\n   \"deal_id\": \"d')",
+   "ok": false,
+   "latency_s": 4.658950500015635,
+   "model": "gemini-2.5-flash",
+   "cost_usd": 0.0035886,
+   "tokens": 5582
+  },
+  {
+   "idx": 15,
+   "thought": "I have processed all deals, filtered for OPEN stages, identified at-risk deals based on 'Red' health or specific keywords in their notes, and resolved owner IDs to names. I have gathered all necessary information to construct the final report.",
    "tool": null,
    "args": {
     "at_risk": [
      {
       "deal_id": "d_0503",
       "owner": "Tom Okafor",
-      "reason": "Red health"
+      "reason": "Health is Red"
      },
      {
       "deal_id": "d_0508",
-      "owner": "UNASSIGNED",
-      "reason": "Red health"
+      "owner": "Liam Byrne",
+      "reason": "Health is Red"
+     },
+     {
+      "deal_id": "d_0504",
+      "owner": "Liam Byrne",
+      "reason": "budget freeze"
+     },
+     {
+      "deal_id": "d_0507",
+      "owner": "Priya Rao",
+      "reason": "security questionnaire"
      },
      {
       "deal_id": "d_0512",
       "owner": "Ravi Nair",
-      "reason": "Amber health"
-     },
-     {
-      "deal_id": "d_0516",
-      "owner": "UNASSIGNED",
-      "reason": "Amber health"
+      "reason": "security questionnaire"
      }
     ]
    },
    "observation": null,
    "ok": true,
-   "latency_s": 6.282423000026029,
+   "latency_s": 4.72051260000444,
    "model": "gemini-2.5-flash",
-   "cost_usd": 0.0039524,
-   "tokens": 4250
+   "cost_usd": 0.0035229,
+   "tokens": 5781
   }
  ],
- "quality": 0.583,
- "feedback": "found 2/5 at-risk deals; 2 false positives; owner correct on 2/2; missed deal ids: ['d_0504', 'd_0507', 'd_0513'] (inspect them: why are they at risk?); not actually at risk: ['d_0512', 'd_0516']"
+ "quality": 0.725,
+ "feedback": "found 4/5 at-risk deals; 1 false positives; owner correct on 2/4; missed deal ids: ['d_0513'] (inspect them: why are they at risk?); not actually at risk: ['d_0512']"
 }

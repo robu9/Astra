@@ -1,12 +1,12 @@
 {
- "facts_new": 4,
+ "facts_new": 3,
  "conventions_new": 1,
  "skill": null,
  "prompt_patch": true,
- "facts_demoted": 3,
- "cost_usd": 0.0065407,
- "latency_s": 11.317811299988534,
+ "facts_demoted": 1,
+ "cost_usd": 0.0055939,
+ "latency_s": 8.67033769999398,
  "model": "gemini-2.5-flash",
- "tokens": 4811,
- "what_went_wrong": "The agent failed to triage all open issues, mislabeled several issues, and misassigned some owners, particularly for critical issues."
+ "tokens": 4713,
+ "what_went_wrong": "The agent failed to call `add_label` and `assign_issue` for several issues, and incorrectly assigned a label for issue #208."
 }

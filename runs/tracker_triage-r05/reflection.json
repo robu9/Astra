@@ -1,12 +1,16 @@
 {
  "facts_new": 4,
  "conventions_new": 0,
- "skill": null,
+ "skill": {
+  "name": "Triage Open Issues",
+  "status": "candidate",
+  "version": 1
+ },
  "prompt_patch": true,
- "facts_demoted": 7,
- "cost_usd": 0.0066521,
- "latency_s": 11.019546700001229,
+ "facts_demoted": 0,
+ "cost_usd": 0.005433899999999999,
+ "latency_s": 8.018072299979394,
  "model": "gemini-2.5-flash",
- "tokens": 5549,
- "what_went_wrong": "The agent incorrectly applied special handling rules for critical issues like 'Production outage', 'Data loss', and '500 errors', which were based on incorrect prior facts."
+ "tokens": 5727,
+ "what_went_wrong": "The agent incorrectly applied labels and assigned owners for several issues, indicating that existing rules for '500 on save', 'Export to CSV fails', and 'Typo' were not specific enough or were overridden by other unstated conventions."
 }

@@ -51,6 +51,9 @@ Rules
   prompt_patch. Only state a business rule when the trace contains the evidence for it.
 - bad_facts: list every fact the actor was given that this run's evidence contradicts or that led to wrong actions.
   Removing a wrong fact is as valuable as adding a right one.
+- If quality < 0.9 and TOOLS NEVER CALLED THIS RUN is non-empty, prompt_patch MUST name one of those tools and tell the
+  actor to call it on every record next run. Never write hedges like "X is not always Y"; either state the rule with
+  evidence or direct the actor to the tool that will reveal it.
 """
 
 

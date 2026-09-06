@@ -1,12 +1,16 @@
 {
- "facts_new": 1,
- "conventions_new": 0,
- "skill": null,
+ "facts_new": 2,
+ "conventions_new": 1,
+ "skill": {
+  "name": "At-Risk Pipeline Report",
+  "status": "promoted",
+  "version": 2
+ },
  "prompt_patch": true,
  "facts_demoted": 1,
- "cost_usd": 0.0048604,
- "latency_s": 8.066707799996948,
+ "cost_usd": 0.0055393000000000005,
+ "latency_s": 8.926317400007974,
  "model": "gemini-2.5-flash",
- "tokens": 4446,
- "what_went_wrong": "The actor failed to call `crm.get_notes` for deals with 'health'='G' to determine if they were at risk, despite a prompt patch instructing it to do so, leading to missed at-risk deals."
+ "tokens": 5895,
+ "what_went_wrong": "The actor incorrectly identified deal 'd_0412' as at-risk by hallucinating a note about a security questionnaire without calling crm.get_notes for that deal."
 }
