@@ -60,5 +60,46 @@
       }
     ],
     "active_before_candidate": "When triaging issues, if the module is 'billing', 'exports', or 'mobile', or if the title contains 'Data loss' or 'sync is broken' for the 'exports' module, or if no clear label rule applies, call `tracker.get_issue` and `tracker.list_comments` for the issue to gather more context before deciding on the assignee and labels. Do not assume 'Export to CSV fails' or 'sync is broken' implies 'sev-2' without further evidence. Ensure all issues from `list_issues` are processed."
+  },
+  "gh_bug_triage@github": {
+    "active": "The tool github.list_collaborators is not available. To determine 'maintainer_replied', you must call github.get_issue for each issue to check for comments, but there is no tool to list repository collaborators. Therefore, 'maintainer_replied' cannot be accurately determined with the current tools. Ensure 'age_days' is calculated accurately using the 'created_at' field from the issue object and today's date (2026-09-06).",
+    "candidate": {
+      "text": "The tool github.list_collaborators is not available. To determine 'maintainer_replied', you must call github.get_issue for each issue to check for comments, but there is no tool to list repository collaborators. Therefore, 'maintainer_replied' cannot be accurately determined with the current tools. Ensure 'age_days' is calculated accurately using the 'created_at' field from the issue object and today's date (2026-09-06).",
+      "run": "gh_bug_triage-r03"
+    },
+    "history": [
+      {
+        "text": "To calculate 'age_days', use the 'created_at' field from github.list_issues. For 'maintainer_replied', you MUST call github.get_issue for each issue to inspect its comments and their 'author_association' field (e.g., 'COLLABORATOR', 'MEMBER', 'OWNER').",
+        "run": "gh_bug_triage-r01",
+        "kept": false,
+        "resolved_run": "gh_bug_triage-r02"
+      },
+      {
+        "text": "You must process all issues returned by github.list_issues, not just a subset. For 'maintainer_replied', first call github.list_collaborators for the repo. Then, for each issue, call github.list_issue_comments to get all comments and check if any comment author is a collaborator. Ensure 'age_days' is calculated accurately using the 'created_at' field and today's date (2026-09-06).",
+        "run": "gh_bug_triage-r02",
+        "kept": true,
+        "resolved_run": "gh_bug_triage-r03"
+      }
+    ],
+    "active_before_candidate": "You must process all issues returned by github.list_issues, not just a subset. For 'maintainer_replied', first call github.list_collaborators for the repo. Then, for each issue, call github.list_issue_comments to get all comments and check if any comment author is a collaborator. Ensure 'age_days' is calculated accurately using the 'created_at' field and today's date (2026-09-06)."
+  },
+  "gh_bug_digest@github": {
+    "active": "When calculating 'age_days', ensure the difference in days is correctly computed as an integer, where 'created_at' on 2026-09-05 and 'today' on 2026-09-06 yields 1 day. For 'assigned' status, explicitly check if the 'assignees' list is empty or not. Ensure all issues returned by github.list_issues (up to 'per_page') are processed.",
+    "candidate": null,
+    "history": [
+      {
+        "text": "After calling github.list_issues with per_page: 10, process the results directly. Do not make additional calls with smaller per_page values. Extract all required fields (number, title, comments, assignees, labels) from the initial response and calculate age_days and other_labels. Then, format the final digest.",
+        "run": "gh_bug_digest-r01",
+        "kept": true,
+        "resolved_run": "gh_bug_digest-r02"
+      },
+      {
+        "text": "When calculating 'age_days', ensure the difference in days is correctly computed as an integer, where 'created_at' on 2026-09-05 and 'today' on 2026-09-06 yields 1 day. For 'assigned' status, explicitly check if the 'assignees' list is empty or not. Ensure all issues returned by github.list_issues (up to 'per_page') are processed.",
+        "run": "gh_bug_digest-r03",
+        "kept": true,
+        "resolved_run": "gh_bug_digest-r04"
+      }
+    ],
+    "active_before_candidate": "After calling github.list_issues with per_page: 10, process the results directly. Do not make additional calls with smaller per_page values. Extract all required fields (number, title, comments, assignees, labels) from the initial response and calculate age_days and other_labels. Then, format the final digest."
   }
 }

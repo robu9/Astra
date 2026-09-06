@@ -139,5 +139,167 @@
     "conventions": [],
     "probed": true,
     "shape": "object keys=['members']"
+  },
+  "github.search_repositories": {
+    "description": "Search for GitHub repositories",
+    "calls": 0,
+    "ok": 0,
+    "errors": 0,
+    "latency_total": 0.0,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "github.get_file_contents": {
+    "description": "Get the contents of a file or directory from a GitHub repository",
+    "calls": 0,
+    "ok": 0,
+    "errors": 0,
+    "latency_total": 0.0,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "github.list_commits": {
+    "description": "Get list of commits of a branch in a GitHub repository",
+    "calls": 0,
+    "ok": 0,
+    "errors": 0,
+    "latency_total": 0.0,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "github.list_issues": {
+    "description": "List issues in a GitHub repository with filtering options",
+    "calls": 9,
+    "ok": 9,
+    "errors": 0,
+    "latency_total": 8.0988,
+    "error_signatures": {},
+    "conventions": [
+      "The 'per_page' argument successfully returns the specified number of issues (e.g., 8 issues were returned in the trace, but only 3 were processed).",
+      "When requesting a specific number of items (e.g., 10), setting `per_page` to that number (e.g., 10) in a single call is sufficient if the total items are within that limit. Subsequent calls with smaller `per_page` and `page` are redundant if the initial call already retrieved enough data.",
+      "To get recently updated issues, use `sort: \"updated\"` and `direction: \"desc\"`.",
+      "To filter issues by a specific label, pass the label name(s) in a list to the `labels` argument (e.g., `labels: [\"bug\"]`).",
+      "To get open issues, use `state: \"open\"`."
+    ],
+    "probed": false,
+    "shape": null
+  },
+  "github.search_code": {
+    "description": "Search for code across GitHub repositories",
+    "calls": 0,
+    "ok": 0,
+    "errors": 0,
+    "latency_total": 0.0,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "github.search_issues": {
+    "description": "Search for issues and pull requests across GitHub repositories",
+    "calls": 0,
+    "ok": 0,
+    "errors": 0,
+    "latency_total": 0.0,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "github.search_users": {
+    "description": "Search for users on GitHub",
+    "calls": 0,
+    "ok": 0,
+    "errors": 0,
+    "latency_total": 0.0,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "github.get_issue": {
+    "description": "Get details of a specific issue in a GitHub repository.",
+    "calls": 2,
+    "ok": 2,
+    "errors": 0,
+    "latency_total": 0.9487,
+    "error_signatures": {},
+    "conventions": [
+      "This tool does not return issue comments; use github.list_issue_comments for that purpose."
+    ],
+    "probed": false,
+    "shape": null
+  },
+  "github.get_pull_request": {
+    "description": "Get details of a specific pull request",
+    "calls": 0,
+    "ok": 0,
+    "errors": 0,
+    "latency_total": 0.0,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "github.list_pull_requests": {
+    "description": "List and filter repository pull requests",
+    "calls": 0,
+    "ok": 0,
+    "errors": 0,
+    "latency_total": 0.0,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "github.get_pull_request_files": {
+    "description": "Get the list of files changed in a pull request",
+    "calls": 0,
+    "ok": 0,
+    "errors": 0,
+    "latency_total": 0.0,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "github.get_pull_request_status": {
+    "description": "Get the combined status of all status checks for a pull request",
+    "calls": 0,
+    "ok": 0,
+    "errors": 0,
+    "latency_total": 0.0,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "github.get_pull_request_comments": {
+    "description": "Get the review comments on a pull request",
+    "calls": 0,
+    "ok": 0,
+    "errors": 0,
+    "latency_total": 0.0,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "github.get_pull_request_reviews": {
+    "description": "Get the reviews on a pull request",
+    "calls": 0,
+    "ok": 0,
+    "errors": 0,
+    "latency_total": 0.0,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
   }
 }

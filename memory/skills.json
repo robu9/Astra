@@ -61,5 +61,57 @@
     "wins": 0,
     "uses": 3,
     "promoted_run": "tracker_triage-r03"
+  },
+  {
+    "name": "Get Recently Updated Labeled Issues Digest",
+    "when": "when asked for a digest of recently updated open issues with a specific label (e.g., 'bug') for a GitHub repository, including details like number, title, age_days, comments, assigned status, and othe",
+    "steps": [
+      "Call `github.list_issues` with `owner`, `repo`, `labels` (e.g., `[\"bug\"]`), `state: \"open\"`, `sort: \"updated\"`, `direction: \"desc\"`, and `per_page` (e.g., `10`).",
+      "For each issue in the response, extract `number`, `title`, `comments`.",
+      "Calculate `age_days` by finding the difference in days between the current date (e.g., 2026-09-06) and the issue's `created_at` field.",
+      "Determine `assigned` status by checking if the issue's `assignees` list is not empty.",
+      "Extract `other_labels` by filtering the issue's `labels` array to include only names that are not the specified label (e.g., 'bug').",
+      "Format the extracted and calculated data into the requested digest."
+    ],
+    "tools": [
+      "github.list_issues"
+    ],
+    "servers": [
+      "github"
+    ],
+    "family": "gh_bug_digest",
+    "status": "rejected",
+    "proposed_run": "gh_bug_digest-r02",
+    "version": 1,
+    "wins": 0,
+    "uses": 0,
+    "rejected_run": "gh_bug_digest-r03",
+    "reason": "quality fell 1.00 -> 0.40"
+  },
+  {
+    "name": "Digest GitHub issues by label and update time",
+    "when": "User asks for a digest of N most recently updated open issues with a specific label for a given GitHub repository, including number, title, age_days, comments, assigned status, and other_labels.",
+    "steps": [
+      "Call `github.list_issues` with `owner`, `repo`, `state='open'`, `labels=[<label>]`, `sort='updated'`, `direction='desc'`, and `per_page=<N>`.",
+      "For each issue returned:",
+      "  Extract `number` and `title`.",
+      "  Calculate `age_days` as the integer difference between 'today' (e.g., 2026-09-06) and `issue.created_at`.",
+      "  Extract `comments` count from `issue.comments`.",
+      "  Determine `assigned` as `true` if `issue.assignees` is not empty, `false` otherwise.",
+      "  Filter `issue.labels` to get `other_labels` (all label names except the specified `<label>`).",
+      "Return the processed list of issues."
+    ],
+    "tools": [
+      "github.list_issues"
+    ],
+    "servers": [
+      "github"
+    ],
+    "family": "gh_bug_digest",
+    "status": "candidate",
+    "proposed_run": "gh_bug_digest-r04",
+    "version": 1,
+    "wins": 0,
+    "uses": 0
   }
 ]

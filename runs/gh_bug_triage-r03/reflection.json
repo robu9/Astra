@@ -1,0 +1,12 @@
+{
+ "facts_new": 2,
+ "conventions_new": 0,
+ "skill": null,
+ "prompt_patch": true,
+ "facts_demoted": 2,
+ "cost_usd": 0.005121,
+ "latency_s": 8.886322500009555,
+ "model": "gemini-2.5-flash",
+ "tokens": 4596,
+ "what_went_wrong": "The agent attempted to call an unavailable tool, github.list_collaborators, which prevented it from correctly determining 'maintainer_replied', and the 'age_days' calculation was incorrect."
+}

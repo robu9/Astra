@@ -1,0 +1,16 @@
+{
+ "facts_new": 0,
+ "conventions_new": 0,
+ "skill": {
+  "name": "Digest GitHub issues by label and update time",
+  "status": "candidate",
+  "version": 1
+ },
+ "prompt_patch": false,
+ "facts_demoted": 0,
+ "cost_usd": 0.0037986,
+ "latency_s": 7.15720380001585,
+ "model": "gemini-2.5-flash",
+ "tokens": 4148,
+ "what_went_wrong": ""
+}

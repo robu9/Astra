@@ -1,0 +1,12 @@
+{
+ "facts_new": 1,
+ "conventions_new": 0,
+ "skill": null,
+ "prompt_patch": true,
+ "facts_demoted": 5,
+ "cost_usd": 0.0049023999999999995,
+ "latency_s": 8.454916799993953,
+ "model": "gemini-2.5-flash",
+ "tokens": 4234,
+ "what_went_wrong": "The agent failed to return the requested number of issues, incorrectly calculated 'age_days' for one issue, and misidentified the 'assigned' status for another."
+}

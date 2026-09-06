@@ -510,5 +510,225 @@
       "owned",
       "search"
     ]
+  },
+  {
+    "fact": "To calculate 'age_days' for an issue, use the 'created_at' field from the issue object and calculate the difference from the current date.",
+    "server": null,
+    "source_tool": "github.list_issues",
+    "evidence": "github.list_issues output contains 'created_at' (implied, standard field) which was not used.",
+    "confidence": 0.6,
+    "first_run": "gh_bug_triage-r01",
+    "last_seen_run": "gh_bug_triage-r01",
+    "seen": 1,
+    "tags": [
+      "age_days",
+      "calculate",
+      "created_at",
+      "current",
+      "date",
+      "difference",
+      "field",
+      "issue"
+    ]
+  },
+  {
+    "fact": "To determine 'maintainer_replied' for an issue, you must call github.get_issue for each issue to retrieve its comments, then check if any comment author is a repository member/owner/collaborator.",
+    "server": "github",
+    "source_tool": "github.get_issue",
+    "evidence": "The agent made no calls to list comments or check collaborator status, as noted in grader feedback.",
+    "confidence": 0.2,
+    "first_run": "gh_bug_triage-r01",
+    "last_seen_run": "gh_bug_triage-r01",
+    "seen": 1,
+    "tags": [
+      "author",
+      "call",
+      "check",
+      "collaborator",
+      "comment",
+      "comments",
+      "determine",
+      "get_issue"
+    ]
+  },
+  {
+    "fact": "To determine 'maintainer_replied' for an issue, you must first call github.list_collaborators for the repository to get a list of maintainers, then for each issue, call github.list_issue_comments to retrieve its comments, and finally check if any comment author's login is in the list of maintainers.",
+    "server": "github",
+    "source_tool": null,
+    "evidence": "Grader feedback explicitly stated 'did not call list_issue_comments or list_collaborators to accurately determine if a maintainer replied'.",
+    "confidence": 0.6,
+    "first_run": "gh_bug_triage-r02",
+    "last_seen_run": "gh_bug_triage-r02",
+    "seen": 1,
+    "tags": [
+      "author",
+      "call",
+      "check",
+      "comment",
+      "comments",
+      "determine",
+      "finally",
+      "first"
+    ]
+  },
+  {
+    "fact": "The 'age_days' calculation must use the 'created_at' field from the issue object and calculate the difference from the current date (2026-09-06).",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Grader feedback stated 'The age_days calculation for issue 4998 (0) was incorrect'.",
+    "confidence": 0.2,
+    "first_run": "gh_bug_triage-r02",
+    "last_seen_run": "gh_bug_triage-r02",
+    "seen": 1,
+    "tags": [
+      "2026-09-06",
+      "age_days",
+      "calculate",
+      "calculation",
+      "created_at",
+      "current",
+      "date",
+      "difference"
+    ]
+  },
+  {
+    "fact": "The tool github.list_collaborators is not available for identifying repository maintainers.",
+    "server": "github",
+    "source_tool": null,
+    "evidence": "ERROR: unknown tool 'github.list_collaborators'. Available: github.get_file_contents, github.get_issue, github.get_pull_request, github.get_pull_request_comments, github.get_pull_request_files, github.get_pull_request_reviews, github.get_pull_request_status, github.list_commits, github.list_issues, ",
+    "confidence": 1.0,
+    "first_run": "gh_bug_triage-r03",
+    "last_seen_run": "gh_bug_triage-r03",
+    "seen": 1,
+    "tags": [
+      "available",
+      "github",
+      "identifying",
+      "list_collaborators",
+      "maintainers",
+      "not",
+      "repository",
+      "tool"
+    ]
+  },
+  {
+    "fact": "To calculate 'age_days' for an issue, use the 'created_at' field from the issue object and calculate the difference in days from the current date (2026-09-06).",
+    "server": null,
+    "source_tool": null,
+    "evidence": "GRADER FEEDBACK: The `age_days` calculation also seems to be incorrect for some issues based on the provided `updated_at` in the trace and the assumption that `created_at` would be close",
+    "confidence": 0.2,
+    "first_run": "gh_bug_triage-r03",
+    "last_seen_run": "gh_bug_triage-r03",
+    "seen": 1,
+    "tags": [
+      "2026-09-06",
+      "age_days",
+      "calculate",
+      "created_at",
+      "current",
+      "date",
+      "days",
+      "difference"
+    ]
+  },
+  {
+    "fact": "The `github.list_issues` tool returns the `comments` count directly in the issue object, so no separate call is needed to get the comment count for an issue.",
+    "server": "github",
+    "source_tool": "github.list_issues",
+    "evidence": "OK: [{\"id\": 5364441141, \"number\": 4998, ..., \"comments\": ...}]",
+    "confidence": 1.0,
+    "first_run": "gh_bug_digest-r01",
+    "last_seen_run": "gh_bug_digest-r02",
+    "seen": 2,
+    "tags": [
+      "call",
+      "comment",
+      "comments",
+      "count",
+      "directly",
+      "github",
+      "issue",
+      "list_issues"
+    ]
+  },
+  {
+    "fact": "For `github.list_issues` results, an issue is considered 'assigned' if its `assignees` list is not empty.",
+    "server": "github",
+    "source_tool": "github.list_issues",
+    "evidence": "OK: [{\"id\": 5364441141, ..., \"assignees\": [...]}]",
+    "confidence": 0.6,
+    "first_run": "gh_bug_digest-r01",
+    "last_seen_run": "gh_bug_digest-r02",
+    "seen": 2,
+    "tags": [
+      "assigned",
+      "assignees",
+      "considered",
+      "empty",
+      "github",
+      "issue",
+      "list_issues",
+      "not"
+    ]
+  },
+  {
+    "fact": "For `github.list_issues` results, 'other_labels' are the names of labels in the `labels` array that are not 'bug'.",
+    "server": "github",
+    "source_tool": "github.list_issues",
+    "evidence": "OK: [{\"id\": 5364441141, ..., \"labels\": [{\"id\": 10200167750, \"name\": \"bug\", ...}, {\"id\": 11569574493, \"name\": \"P1\", ...}]}]",
+    "confidence": 1.0,
+    "first_run": "gh_bug_digest-r01",
+    "last_seen_run": "gh_bug_digest-r02",
+    "seen": 2,
+    "tags": [
+      "array",
+      "bug",
+      "github",
+      "labels",
+      "list_issues",
+      "names",
+      "not",
+      "other_labels"
+    ]
+  },
+  {
+    "fact": "To calculate 'age_days' for an issue, use the 'created_at' field from the issue object and calculate the difference in days from the current date.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "age_days (integer days since created_at; today is 2026-09-06)",
+    "confidence": 0.6,
+    "first_run": "gh_bug_digest-r02",
+    "last_seen_run": "gh_bug_digest-r02",
+    "seen": 1,
+    "tags": [
+      "age_days",
+      "calculate",
+      "created_at",
+      "current",
+      "date",
+      "days",
+      "difference",
+      "field"
+    ]
+  },
+  {
+    "fact": "When calculating 'age_days' as integer days since 'created_at' until 2026-09-06, a 'created_at' date of 2026-09-05 results in 1 day.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Grader feedback for issue 4998: 'age_days' should be 1 day, not 0, based on 'created_at' and 'today's date'.",
+    "confidence": 1.0,
+    "first_run": "gh_bug_digest-r03",
+    "last_seen_run": "gh_bug_digest-r03",
+    "seen": 1,
+    "tags": [
+      "2026-09-05",
+      "2026-09-06",
+      "age_days",
+      "calculating",
+      "created_at",
+      "date",
+      "day",
+      "days"
+    ]
   }
 ]
