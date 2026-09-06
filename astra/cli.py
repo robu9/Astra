@@ -89,7 +89,7 @@ def cmd_ao_run(a):
     for fam in a.family:
         for i in range(a.runs_n):
             seed = a.seed + i
-            sid = ao.spawn(worker_prompt(fam, seed, a.transport), name=f"astra {fam} r{seed:02d}")
+            sid = ao.spawn(worker_prompt(fam, seed, a.transport), name=f"{fam} r{seed:02d}"[:20])
             print(f"spawned AO worker {sid} for {fam} seed {seed}")
 
 
