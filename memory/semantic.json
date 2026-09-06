@@ -790,5 +790,45 @@
       "open",
       "owner"
     ]
+  },
+  {
+    "fact": "Issues with 'returns 500' in the title are generally labeled 'sev-2', unless specific context from comments or the module (e.g., 'auth') indicates otherwise.",
+    "server": "tracker",
+    "source_tool": "tracker.list_issues",
+    "evidence": "Issue 103, 104, 105, 109 all contain 'returns 500' and were labeled 'sev-2' after checking comments.",
+    "confidence": 1.0,
+    "first_run": "tracker_triage-r01",
+    "last_seen_run": "tracker_triage-r01",
+    "seen": 1,
+    "tags": [
+      "500",
+      "auth",
+      "comments",
+      "context",
+      "generally",
+      "indicates",
+      "issues",
+      "labeled"
+    ]
+  },
+  {
+    "fact": "Issues with 'Production outage' or 'service down' in the title are generally labeled 'sev-1', unless comments indicate it is a duplicate.",
+    "server": "tracker",
+    "source_tool": "tracker.list_issues",
+    "evidence": "Issue 106, with 'Production outage: exports service down', was labeled 'duplicate' because comments indicated 'duplicate of #37'.",
+    "confidence": 1.0,
+    "first_run": "tracker_triage-r01",
+    "last_seen_run": "tracker_triage-r01",
+    "seen": 1,
+    "tags": [
+      "comments",
+      "down",
+      "duplicate",
+      "generally",
+      "indicate",
+      "issues",
+      "labeled",
+      "outage"
+    ]
   }
 ]

@@ -33,8 +33,10 @@
       "Call `tracker.list_members` to get all members and their owned modules.",
       "Call `tracker.list_labels` to understand available labels and their descriptions.",
       "For each issue, extract the module name from the title (e.g., '[module]').",
-      "Determine the assignee by matching the module name to a member's 'owns' field. If the module is 'billing', 'exports', 'mobile', 'auth', or 'search', check `tracker.get_issue` and `tracker.list_comments` for additional context before assigning.",
-      "Determine the priority label based on keywords in the title: 'Production outage' or 'service down' for 'sev-1'; 'returns 500' for 'sev-2' (unless module is 'auth', then check context); 'Typo', 'Minor alignment issue', or 'Improve empty-state copy' for 'sev-3'. If the title contains 'Data loss' or 'sync is broken' and the module is 'exports', or if 'Export to CSV fails' (especially for 'search' module), or if no keyword matches, check `tracker.get_issue` and `tracker.list_comments` for more information before deciding on a label. If comments indicate 'duplicate', apply 'duplicate' label and do not assign.",
+      "Determine the assignee by matching the module name to a member's 'owns' field.",
+      "Determine the priority label based on keywords in the title: 'Production outage' or 'service down' for 'sev-1'; 'returns 500' for 'sev-2'; 'Typo', 'Minor alignment issue', or 'Improve empty-state copy' for 'sev-3'.",
+      "If the title contains 'Data loss' or 'sync is broken' for the 'exports' module, or if 'Export to CSV fails' is in the title, or if the module is 'auth' and the title contains 'returns 500', or if no clear label rule applies, call `tracker.get_issue` and `tracker.list_comments` for additional context.",
+      "If comments indicate 'duplicate', apply 'duplicate' label and do not assign an owner.",
       "Call `tracker.add_label` with the determined `issue_id` and `label`.",
       "If an assignee is determined, call `tracker.assign_issue` with the determined `issue_id` and `member_id`."
     ],
@@ -52,10 +54,10 @@
     ],
     "family": "tracker_triage",
     "status": "promoted",
-    "proposed_run": "tracker_triage-r05",
-    "version": 3,
-    "wins": 0,
-    "uses": 3,
+    "proposed_run": "tracker_triage-r01",
+    "version": 4,
+    "wins": 1,
+    "uses": 4,
     "promoted_run": "tracker_triage-r03"
   },
   {

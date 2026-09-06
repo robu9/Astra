@@ -1,12 +1,16 @@
 {
- "facts_new": 5,
- "conventions_new": 1,
- "skill": null,
+ "facts_new": 2,
+ "conventions_new": 0,
+ "skill": {
+  "name": "Triage Open Issues",
+  "status": "promoted",
+  "version": 4
+ },
  "prompt_patch": true,
  "facts_demoted": 0,
- "cost_usd": 0.005242800000000001,
- "latency_s": 8.462166199984495,
+ "cost_usd": 0.00599,
+ "latency_s": 8.553918334000002,
  "model": "gemini-2.5-flash",
- "tokens": 4056,
- "what_went_wrong": "The agent correctly identified the labels and assignees but failed to call the `tracker.add_label` and `tracker.assign_issue` tools to apply them."
+ "tokens": 6730,
+ "what_went_wrong": ""
 }

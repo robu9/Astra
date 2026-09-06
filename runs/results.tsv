@@ -17,3 +17,4 @@ gh_bug_digest-r02	gh_bug_digest	github	2	recovering	gemini-2.5-flash	1.0	True	1	
 gh_bug_digest-r03	gh_bug_digest	github	3	novel	gemini-2.5-flash	0.4	False	1	0	0	13235	0.009446	0.004902	15.716	13	2	0	13	reverted	The agent failed to return the requested number of issues, incorrectly calculated 'age_days' for one issue, and misidentified the 'assigned' status for another.
 gh_bug_digest-r04	gh_bug_digest	github	4	novel	gemini-2.5-flash	1.0	True	1	0	0	21893	0.01871	0.003799	27.931	13	2	1	13	kept	
 crm_at_risk-r01	crm_at_risk	crm	1	skilled	mock-fast	1.0	True	7	0	0	16704	0.001727	0.000402	0.11	19	2	1	14	kept	
+tracker_triage-r01	tracker_triage	tracker	1	skilled	gemini-2.5-flash	1.0	True	35	0	0	152146	0.064452	0.00599	88.619	24	2	1	14	kept	

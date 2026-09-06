@@ -37,10 +37,10 @@
     "active_before_candidate": "The `health: 'R'` rule is insufficient for identifying all at-risk deals. For each deal, you MUST call `crm.get_deal` AND `crm.get_notes` to determine its full 'at risk' status and the reason. Only query `crm.list_deals` with known valid stages like 'qualified' and 'negotiation'; 'prospecting' is not a valid stage."
   },
   "tracker_triage@tracker": {
-    "active": "When triaging issues, if the module is 'billing', 'exports', 'mobile', 'auth', or 'search', or if the title contains 'Data loss' or 'sync is broken' for the 'exports' module, or if 'Export to CSV fails' is in the title, or if no clear label rule applies, call `tracker.get_issue` and `tracker.list_comments` for the issue to gather more context before deciding on the assignee and labels. Do not assume 'Export to CSV fails' or 'sync is broken' implies 'sev-2' without further evidence. Ensure all issues from `list_issues` are processed and assigned a label.",
+    "active": "When triaging issues, if the title contains 'Production outage' or 'service down', consider it 'sev-1' unless comments indicate it's a duplicate. If the title contains 'returns 500', consider it 'sev-2' unless the module is 'auth' or comments provide overriding context. Always call `tracker.get_issue` and `tracker.list_comments` for issues with 'Data loss', 'sync is broken' (especially for 'exports' module), 'Export to CSV fails', or 'returns 500' for the 'auth' module, or if no clear label rule applies, to gather more context before deciding on the assignee and labels. Ensure all issues from `list_issues` are processed and assigned a label (or 'duplicate' if applicable).",
     "candidate": {
-      "text": "When triaging issues, if the module is 'billing', 'exports', 'mobile', 'auth', or 'search', or if the title contains 'Data loss' or 'sync is broken' for the 'exports' module, or if 'Export to CSV fails' is in the title, or if no clear label rule applies, call `tracker.get_issue` and `tracker.list_comments` for the issue to gather more context before deciding on the assignee and labels. Do not assume 'Export to CSV fails' or 'sync is broken' implies 'sev-2' without further evidence. Ensure all issues from `list_issues` are processed and assigned a label.",
-      "run": "tracker_triage-r05"
+      "text": "When triaging issues, if the title contains 'Production outage' or 'service down', consider it 'sev-1' unless comments indicate it's a duplicate. If the title contains 'returns 500', consider it 'sev-2' unless the module is 'auth' or comments provide overriding context. Always call `tracker.get_issue` and `tracker.list_comments` for issues with 'Data loss', 'sync is broken' (especially for 'exports' module), 'Export to CSV fails', or 'returns 500' for the 'auth' module, or if no clear label rule applies, to gather more context before deciding on the assignee and labels. Ensure all issues from `list_issues` are processed and assigned a label (or 'duplicate' if applicable).",
+      "run": "tracker_triage-r01"
     },
     "history": [
       {
@@ -60,9 +60,15 @@
         "run": "tracker_triage-r04",
         "kept": true,
         "resolved_run": "tracker_triage-r05"
+      },
+      {
+        "text": "When triaging issues, if the module is 'billing', 'exports', 'mobile', 'auth', or 'search', or if the title contains 'Data loss' or 'sync is broken' for the 'exports' module, or if 'Export to CSV fails' is in the title, or if no clear label rule applies, call `tracker.get_issue` and `tracker.list_comments` for the issue to gather more context before deciding on the assignee and labels. Do not assume 'Export to CSV fails' or 'sync is broken' implies 'sev-2' without further evidence. Ensure all issues from `list_issues` are processed and assigned a label.",
+        "run": "tracker_triage-r05",
+        "kept": true,
+        "resolved_run": "tracker_triage-r01"
       }
     ],
-    "active_before_candidate": "When triaging issues, if the module is 'billing', 'exports', or 'mobile', or if the title contains 'Data loss' or 'sync is broken' for the 'exports' module, or if no clear label rule applies, call `tracker.get_issue` and `tracker.list_comments` for the issue to gather more context before deciding on the assignee and labels. Do not assume 'Export to CSV fails' or 'sync is broken' implies 'sev-2' without further evidence. Ensure all issues from `list_issues` are processed."
+    "active_before_candidate": "When triaging issues, if the module is 'billing', 'exports', 'mobile', 'auth', or 'search', or if the title contains 'Data loss' or 'sync is broken' for the 'exports' module, or if 'Export to CSV fails' is in the title, or if no clear label rule applies, call `tracker.get_issue` and `tracker.list_comments` for the issue to gather more context before deciding on the assignee and labels. Do not assume 'Export to CSV fails' or 'sync is broken' implies 'sev-2' without further evidence. Ensure all issues from `list_issues` are processed and assigned a label."
   },
   "gh_bug_triage@github": {
     "active": "The tool github.list_collaborators is not available. To determine 'maintainer_replied', you must call github.get_issue for each issue to check for comments, but there is no tool to list repository collaborators. Therefore, 'maintainer_replied' cannot be accurately determined with the current tools. Ensure 'age_days' is calculated accurately using the 'created_at' field from the issue object and today's date (2026-09-06).",
