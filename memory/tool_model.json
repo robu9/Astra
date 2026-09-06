@@ -1,1 +1,141 @@
-{}
+{
+  "crm.get_deal": {
+    "description": "Get one deal by id.",
+    "calls": 8,
+    "ok": 8,
+    "errors": 0,
+    "latency_total": 0.0105,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "crm.get_notes": {
+    "description": "Get notes for a deal. Notes are free text written by sales reps.",
+    "calls": 17,
+    "ok": 17,
+    "errors": 0,
+    "latency_total": 0.0176,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "crm.get_owner": {
+    "description": "Get one owner by id.",
+    "calls": 15,
+    "ok": 15,
+    "errors": 0,
+    "latency_total": 0.0263,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "crm.list_deals": {
+    "description": "List deals. Paginated: pass the returned next_cursor to get the next page. Optional stage filter.",
+    "calls": 22,
+    "ok": 21,
+    "errors": 1,
+    "latency_total": 0.0157,
+    "error_signatures": {
+      "invalid stage '*'": 1
+    },
+    "conventions": [
+      "The 'stage' argument requires specific values like 'qualified', 'negotiation', 'closed_lost', 'closed_won', not a generic 'OPEN'.",
+      "Pagination is handled using 'next_cursor' in the response and 'cursor' in subsequent requests until 'next_cursor' is null."
+    ],
+    "probed": true,
+    "shape": "object keys=['items', 'next_cursor', 'total']; items[0] keys=['amount', 'company', 'currency', 'health', 'id', 'owner', 'stage']"
+  },
+  "crm.list_owners": {
+    "description": "List deal owners (sales reps).",
+    "calls": 1,
+    "ok": 1,
+    "errors": 0,
+    "latency_total": 0.0004,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": true,
+    "shape": "object keys=['owners']"
+  },
+  "tracker.add_label": {
+    "description": "Add a label to an issue. Label must exist (see list_labels).",
+    "calls": 44,
+    "ok": 44,
+    "errors": 0,
+    "latency_total": 0.0384,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "tracker.assign_issue": {
+    "description": "Assign an issue to a member by member_id (m_XX).",
+    "calls": 30,
+    "ok": 30,
+    "errors": 0,
+    "latency_total": 0.0624,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "tracker.get_issue": {
+    "description": "Get one issue.",
+    "calls": 4,
+    "ok": 4,
+    "errors": 0,
+    "latency_total": 0.0029,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "tracker.list_comments": {
+    "description": "List comments on an issue.",
+    "calls": 20,
+    "ok": 20,
+    "errors": 0,
+    "latency_total": 0.0194,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "tracker.list_issues": {
+    "description": "List issues. Paginated via next_cursor. Optional status filter (open|closed).",
+    "calls": 12,
+    "ok": 12,
+    "errors": 0,
+    "latency_total": 0.0114,
+    "error_signatures": {},
+    "conventions": [
+      "The tool paginates using 'next_cursor'. The actor must call `list_issues` repeatedly, passing the 'next_cursor' value as the 'cursor' argument, until 'next_cursor' is null."
+    ],
+    "probed": true,
+    "shape": "object keys=['items', 'next_cursor']; items[0] keys=['assignee', 'id', 'labels', 'reporter', 'status', 'title']"
+  },
+  "tracker.list_labels": {
+    "description": "List available labels with their meaning.",
+    "calls": 6,
+    "ok": 6,
+    "errors": 0,
+    "latency_total": 0.0038,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": true,
+    "shape": "object keys=['labels']"
+  },
+  "tracker.list_members": {
+    "description": "List team members and the components they own.",
+    "calls": 6,
+    "ok": 6,
+    "errors": 0,
+    "latency_total": 0.0036,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": true,
+    "shape": "object keys=['members']"
+  }
+}

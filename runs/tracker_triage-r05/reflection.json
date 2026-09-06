@@ -1,0 +1,16 @@
+{
+ "facts_new": 3,
+ "conventions_new": 0,
+ "skill": {
+  "name": "Triage Open Issues",
+  "status": "candidate",
+  "version": 3
+ },
+ "prompt_patch": false,
+ "facts_demoted": 1,
+ "cost_usd": 0.0056488,
+ "latency_s": 7.362870708000173,
+ "model": "gemini-2.5-flash",
+ "tokens": 6766,
+ "what_went_wrong": ""
+}

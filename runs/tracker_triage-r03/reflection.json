@@ -1,0 +1,16 @@
+{
+ "facts_new": 4,
+ "conventions_new": 0,
+ "skill": {
+  "name": "Triage Open Issues",
+  "status": "candidate",
+  "version": 1
+ },
+ "prompt_patch": true,
+ "facts_demoted": 2,
+ "cost_usd": 0.0061112,
+ "latency_s": 9.348049457999878,
+ "model": "gemini-2.5-flash",
+ "tokens": 5814,
+ "what_went_wrong": "The actor misapplied several existing rules for labels and assignees, and some existing rules were incomplete or incorrect."
+}

@@ -1,0 +1,12 @@
+{
+ "facts_new": 5,
+ "conventions_new": 1,
+ "skill": null,
+ "prompt_patch": true,
+ "facts_demoted": 0,
+ "cost_usd": 0.0058362,
+ "latency_s": 9.969414208999751,
+ "model": "gemini-2.5-flash",
+ "tokens": 4780,
+ "what_went_wrong": "The actor failed to call `tracker.add_label` and `tracker.assign_issue` for all issues, and incorrectly identified some issues as duplicates without sufficient verification."
+}

@@ -1,0 +1,16 @@
+{
+ "facts_new": 2,
+ "conventions_new": 0,
+ "skill": {
+  "name": "at_risk_pipeline_report",
+  "status": "candidate",
+  "version": 3
+ },
+ "prompt_patch": true,
+ "facts_demoted": 1,
+ "cost_usd": 0.005294,
+ "latency_s": 8.86511179199988,
+ "model": "gemini-2.5-flash",
+ "tokens": 5972,
+ "what_went_wrong": "The agent incorrectly identified deals with 'Follow-up on security questionnaire' in notes as at-risk, leading to false positives."
+}

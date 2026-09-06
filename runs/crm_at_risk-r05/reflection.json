@@ -1,0 +1,16 @@
+{
+ "facts_new": 2,
+ "conventions_new": 0,
+ "skill": {
+  "name": "at_risk_pipeline_report",
+  "status": "candidate",
+  "version": 4
+ },
+ "prompt_patch": true,
+ "facts_demoted": 1,
+ "cost_usd": 0.0057488999999999995,
+ "latency_s": 9.5446992090001,
+ "model": "gemini-2.5-flash",
+ "tokens": 6579,
+ "what_went_wrong": "The actor failed to call crm.get_deal for each open deal, leading to a missed at-risk deal and incorrect identification of others based on an incomplete understanding of risk criteria."
+}

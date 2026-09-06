@@ -1,0 +1,16 @@
+{
+ "facts_new": 2,
+ "conventions_new": 0,
+ "skill": {
+  "name": "Triage Open Issues",
+  "status": "candidate",
+  "version": 1
+ },
+ "prompt_patch": true,
+ "facts_demoted": 1,
+ "cost_usd": 0.0049946999999999995,
+ "latency_s": 8.40098074999969,
+ "model": "gemini-2.5-flash",
+ "tokens": 4879,
+ "what_went_wrong": "The agent failed to assign owners to some issues and mislabeled others, likely due to not confirming potential duplicates or applying incorrect priority rules."
+}

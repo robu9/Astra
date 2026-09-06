@@ -1,1 +1,61 @@
-{}
+{
+  "crm_at_risk@crm": {
+    "active": "For each OPEN deal, ALWAYS call crm.get_deal to get detailed information. When identifying at-risk deals, 'health' 'R' is a direct indicator. For 'health' 'A' or 'G', check crm.get_deal and crm.get_notes for specific risk indicators. Do NOT consider 'Follow-up on security questionnaire' in notes as a risk indicator.",
+    "candidate": {
+      "text": "For each OPEN deal, ALWAYS call crm.get_deal to get detailed information. When identifying at-risk deals, 'health' 'R' is a direct indicator. For 'health' 'A' or 'G', check crm.get_deal and crm.get_notes for specific risk indicators. Do NOT consider 'Follow-up on security questionnaire' in notes as a risk indicator.",
+      "run": "crm_at_risk-r05"
+    },
+    "history": [
+      {
+        "text": "To find all at-risk deals, first list all deals and filter for 'qualified' or 'negotiation' stages. For each of these, call crm.get_deal to check for additional risk signals beyond the 'health' field. Also, check if the owner is active using crm.get_owner; if not, mark as 'UNASSIGNED'.",
+        "run": "crm_at_risk-r01",
+        "kept": true,
+        "resolved_run": "crm_at_risk-r02"
+      },
+      {
+        "text": "To find all at-risk deals, first list ALL deals without a stage filter, then filter for 'OPEN' stages (including 'qualified', 'negotiation', and others). For each OPEN deal, call crm.get_deal AND crm.get_notes to check for all risk signals. Also, check if the owner is active using crm.get_owner; if not, mark as 'UNASSIGNED'.",
+        "run": "crm_at_risk-r02",
+        "kept": true,
+        "resolved_run": "crm_at_risk-r03"
+      },
+      {
+        "text": "When identifying at-risk deals, prioritize 'health' status ('A' or 'R'). Do NOT consider 'Follow-up on security questionnaire' in notes as a risk indicator. Ensure all OPEN stages, including 'proposal', are checked.",
+        "run": "crm_at_risk-r03",
+        "kept": true,
+        "resolved_run": "crm_at_risk-r04"
+      }
+    ],
+    "active_before_candidate": "When identifying at-risk deals, prioritize 'health' status ('A' or 'R'). Do NOT consider 'Follow-up on security questionnaire' in notes as a risk indicator. Ensure all OPEN stages, including 'proposal', are checked."
+  },
+  "tracker_triage@tracker": {
+    "active": "Prioritize issues with 'All users cannot log in' or 'Data loss' as 'sev-1'. Always assign an owner to non-duplicate issues. Only mark issues as 'duplicate' if comments explicitly state it; otherwise, treat issues with identical titles as distinct and apply appropriate labels and assignees.",
+    "candidate": null,
+    "history": [
+      {
+        "text": "Before deciding an issue is a duplicate, call tracker.get_issue and tracker.list_comments for both issues to confirm. Ensure all issues are processed, including those from paginated results, and that `add_label` and `assign_issue` are called for every non-duplicate issue.",
+        "run": "tracker_triage-r01",
+        "kept": true,
+        "resolved_run": "tracker_triage-r02"
+      },
+      {
+        "text": "Before deciding an issue is a duplicate, call tracker.get_issue and tracker.list_comments for both issues to confirm. Ensure all issues are processed, including those from paginated results, and that `add_label` and `assign_issue` are called for every non-duplicate issue. Pay close attention to the exact wording of issue titles for priority rules.",
+        "run": "tracker_triage-r02",
+        "kept": false,
+        "resolved_run": "tracker_triage-r03"
+      },
+      {
+        "text": "Pay close attention to the specific wording in issue titles and comments for determining labels. For 'Typo in mobile settings tooltip', check comments for 'Customer escalated' to decide between 'sev-3' and 'sev-2'. For 'sync is broken', use 'sev-2'. For '500 on save', use 'sev-2'. Only mark issues as 'duplicate' if comments explicitly state it; otherwise, treat issues with identical titles as distinct and apply appropriate labels and assignees.",
+        "run": "tracker_triage-r03",
+        "kept": true,
+        "resolved_run": "tracker_triage-r04"
+      },
+      {
+        "text": "Prioritize issues with 'All users cannot log in' or 'Data loss' as 'sev-1'. Always assign an owner to non-duplicate issues. Only mark issues as 'duplicate' if comments explicitly state it; otherwise, treat issues with identical titles as distinct and apply appropriate labels and assignees.",
+        "run": "tracker_triage-r04",
+        "kept": true,
+        "resolved_run": "tracker_triage-r05"
+      }
+    ],
+    "active_before_candidate": "Pay close attention to the specific wording in issue titles and comments for determining labels. For 'Typo in mobile settings tooltip', check comments for 'Customer escalated' to decide between 'sev-3' and 'sev-2'. For 'sync is broken', use 'sev-2'. For '500 on save', use 'sev-2'. Only mark issues as 'duplicate' if comments explicitly state it; otherwise, treat issues with identical titles as distinct and apply appropriate labels and assignees."
+  }
+}

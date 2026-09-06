@@ -1,0 +1,16 @@
+{
+ "facts_new": 2,
+ "conventions_new": 0,
+ "skill": {
+  "name": "Triage Open Issues",
+  "status": "candidate",
+  "version": 2
+ },
+ "prompt_patch": true,
+ "facts_demoted": 1,
+ "cost_usd": 0.0052215,
+ "latency_s": 8.110160041999734,
+ "model": "gemini-2.5-flash",
+ "tokens": 5635,
+ "what_went_wrong": "The actor incorrectly applied priority labels for critical issues and failed to assign owners to some issues, particularly those that were not duplicates."
+}

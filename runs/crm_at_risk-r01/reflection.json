@@ -1,0 +1,16 @@
+{
+ "facts_new": 3,
+ "conventions_new": 2,
+ "skill": {
+  "name": "at_risk_pipeline_report",
+  "status": "candidate",
+  "version": 1
+ },
+ "prompt_patch": true,
+ "facts_demoted": 0,
+ "cost_usd": 0.0050305,
+ "latency_s": 9.036929333999979,
+ "model": "gemini-2.5-flash",
+ "tokens": 4001,
+ "what_went_wrong": "The actor failed to correctly identify all 'at-risk' deals and did not handle inactive owners, missing one deal and providing an incorrect owner for another."
+}

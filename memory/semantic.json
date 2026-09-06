@@ -1,1 +1,526 @@
-[]
+[
+  {
+    "fact": "The 'stage' argument for crm.list_deals does not accept 'OPEN'; valid open stages observed are 'qualified' and 'negotiation'.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "[1] crm.list_deals({\"stage\": \"OPEN\"}) -> ERROR: ERROR: invalid stage 'OPEN'",
+    "confidence": 0.6,
+    "first_run": "crm_at_risk-r01",
+    "last_seen_run": "crm_at_risk-r01",
+    "seen": 1,
+    "tags": [
+      "accept",
+      "argument",
+      "crm",
+      "does",
+      "list_deals",
+      "negotiation",
+      "not",
+      "observed"
+    ]
+  },
+  {
+    "fact": "A deal is considered 'at risk' if its 'health' is 'A' (Amber) or 'R' (Red), but there can be other reasons for a deal to be at risk, which may be found in crm.get_deal or crm.get_notes.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "Grader feedback: missed deal ids: ['d_0109'] (inspect them: why are they at risk?) and [4] {\"id\": \"d_0109\", \"company\": \"Cyberdyne\", \"stage\": \"negotiation\", \"health\": \"G\"}",
+    "confidence": 0.4,
+    "first_run": "crm_at_risk-r01",
+    "last_seen_run": "crm_at_risk-r01",
+    "seen": 1,
+    "tags": [
+      "amber",
+      "but",
+      "can",
+      "considered",
+      "crm",
+      "deal",
+      "found",
+      "get_deal"
+    ]
+  },
+  {
+    "fact": "If a deal's owner is found to be inactive via crm.get_owner, the deal should be reported with owner 'UNASSIGNED'.",
+    "server": "crm",
+    "source_tool": "crm.get_owner",
+    "evidence": "[6] crm.get_owner({\"owner_id\": \"u_01\"}) -> OK: {\"id\": \"u_01\", \"name\": \"Priya Rao\", \"active\": false} and Grader feedback: owner correct on 0/1",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r01",
+    "last_seen_run": "crm_at_risk-r01",
+    "seen": 1,
+    "tags": [
+      "crm",
+      "deal",
+      "found",
+      "get_owner",
+      "inactive",
+      "owner",
+      "reported",
+      "should"
+    ]
+  },
+  {
+    "fact": "Deals can be at risk even if their 'health' field is 'G' (Green), with the reason for risk often found in crm.get_notes.",
+    "server": "crm",
+    "source_tool": "crm.get_notes",
+    "evidence": "Grader feedback indicates missed deals d_0203 and d_0204 were at risk despite having 'health': 'G' in crm.list_deals and crm.get_deal.",
+    "confidence": 0.5,
+    "first_run": "crm_at_risk-r02",
+    "last_seen_run": "crm_at_risk-r02",
+    "seen": 1,
+    "tags": [
+      "can",
+      "crm",
+      "deals",
+      "even",
+      "field",
+      "found",
+      "get_notes",
+      "green"
+    ]
+  },
+  {
+    "fact": "The 'OPEN' status for deals is not fully covered by 'qualified' and 'negotiation' stages; other stages may also represent open deals.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "Deals d_0201, d_0207, and d_0215 were missed and not returned by crm.list_deals when filtered by 'qualified' or 'negotiation' stages.",
+    "confidence": 0.8,
+    "first_run": "crm_at_risk-r02",
+    "last_seen_run": "crm_at_risk-r02",
+    "seen": 1,
+    "tags": [
+      "also",
+      "covered",
+      "deals",
+      "fully",
+      "may",
+      "negotiation",
+      "not",
+      "open"
+    ]
+  },
+  {
+    "fact": "The 'amount' field in crm.list_deals is in base units (e.g., USD), while 'amount_cents' in crm.get_deal is in cents.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "crm.list_deals returns 'amount': 142000.0, while crm.get_deal returns 'amount_cents': 14200000 for the same deal.",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r02",
+    "last_seen_run": "crm_at_risk-r02",
+    "seen": 1,
+    "tags": [
+      "amount",
+      "amount_cents",
+      "base",
+      "cents",
+      "crm",
+      "field",
+      "get_deal",
+      "list_deals"
+    ]
+  },
+  {
+    "fact": "A note containing 'Follow-up on security questionnaire' in crm.get_notes does not indicate a deal is at risk.",
+    "server": "crm",
+    "source_tool": "crm.get_notes",
+    "evidence": "Grader feedback indicated d_0310 and d_0313 were false positives, both had 'health: G' and notes with 'Follow-up on security questionnaire'.",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r03",
+    "last_seen_run": "crm_at_risk-r03",
+    "seen": 1,
+    "tags": [
+      "containing",
+      "crm",
+      "deal",
+      "does",
+      "follow-up",
+      "get_notes",
+      "indicate",
+      "not"
+    ]
+  },
+  {
+    "fact": "The 'proposal' stage in crm.list_deals represents an OPEN deal.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "Deal d_0302 and d_0309 were in 'proposal' stage and correctly identified as open and at-risk.",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r03",
+    "last_seen_run": "crm_at_risk-r03",
+    "seen": 1,
+    "tags": [
+      "crm",
+      "deal",
+      "list_deals",
+      "open",
+      "proposal",
+      "represents",
+      "stage"
+    ]
+  },
+  {
+    "fact": "For the 'at-risk pipeline report' task, `crm.get_deal` is not required; sufficient information is available from `crm.list_deals` and `crm.get_notes`.",
+    "server": "crm",
+    "source_tool": null,
+    "evidence": "TOOLS NEVER CALLED THIS RUN: crm.get_deal",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r04",
+    "last_seen_run": "crm_at_risk-r04",
+    "seen": 1,
+    "tags": [
+      "at-risk",
+      "available",
+      "crm",
+      "get_deal",
+      "get_notes",
+      "information",
+      "list_deals",
+      "not"
+    ]
+  },
+  {
+    "fact": "Risk reasons can be found in `crm.get_notes` even for deals with 'health' status 'G' (Green).",
+    "server": "crm",
+    "source_tool": "crm.get_notes",
+    "evidence": "crm.get_notes({\"deal_id\": \"d_0404\"}) -> \"PO pending with finance, no ETA\"; crm.get_notes({\"deal_id\": \"d_0408\"}) -> \"Waiting on PO pending approval\"; crm.get_notes({\"deal_id\": \"d_0411\"}) -> \"Customer mentioned a budget freeze\"",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r04",
+    "last_seen_run": "crm_at_risk-r04",
+    "seen": 1,
+    "tags": [
+      "can",
+      "crm",
+      "deals",
+      "even",
+      "found",
+      "get_notes",
+      "green",
+      "health"
+    ]
+  },
+  {
+    "fact": "A deal with 'health' status 'A' (Amber) is not necessarily at risk; additional information from crm.get_deal or crm.get_notes is required to confirm risk.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "Grader feedback indicates d_0512 and d_0516 (both health 'A') were false positives.",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r05",
+    "last_seen_run": "crm_at_risk-r05",
+    "seen": 1,
+    "tags": [
+      "additional",
+      "amber",
+      "confirm",
+      "crm",
+      "deal",
+      "get_deal",
+      "get_notes",
+      "health"
+    ]
+  },
+  {
+    "fact": "A deal with 'health' status 'G' (Green) can be at risk, and the reason may be found in crm.get_deal, not just crm.get_notes.",
+    "server": "crm",
+    "source_tool": "crm.get_deal",
+    "evidence": "Deal d_0513 (health 'G') was missed, and crm.get_deal was not called, suggesting it might hold the risk reason.",
+    "confidence": 0.8,
+    "first_run": "crm_at_risk-r05",
+    "last_seen_run": "crm_at_risk-r05",
+    "seen": 1,
+    "tags": [
+      "can",
+      "crm",
+      "deal",
+      "found",
+      "get_deal",
+      "get_notes",
+      "green",
+      "health"
+    ]
+  },
+  {
+    "fact": "Issues with identical titles are considered duplicates and should not be assigned an owner, but this must be confirmed by checking comments or details.",
+    "server": "tracker",
+    "source_tool": "tracker.list_issues",
+    "evidence": "Issue 103 and 105 have identical titles: '[billing] billing page returns 500 on save'. Issue 108 and 102 have identical titles: '[auth] Minor alignment issue in auth header'.",
+    "confidence": 0.4,
+    "first_run": "tracker_triage-r01",
+    "last_seen_run": "tracker_triage-r01",
+    "seen": 1,
+    "tags": [
+      "assigned",
+      "but",
+      "checking",
+      "comments",
+      "confirmed",
+      "considered",
+      "details",
+      "duplicates"
+    ]
+  },
+  {
+    "fact": "Issues with 'Production outage' in the title are 'sev-1'.",
+    "server": "tracker",
+    "source_tool": "tracker.list_labels",
+    "evidence": "Label 'sev-1' description: 'Priority: production outage or data loss. Page on-call.'",
+    "confidence": 1.0,
+    "first_run": "tracker_triage-r01",
+    "last_seen_run": "tracker_triage-r01",
+    "seen": 1,
+    "tags": [
+      "issues",
+      "outage",
+      "production",
+      "sev-1",
+      "title"
+    ]
+  },
+  {
+    "fact": "Issues with '500 on save' in the title are 'sev-2'.",
+    "server": "tracker",
+    "source_tool": "tracker.list_labels",
+    "evidence": "Label 'sev-2' description: 'Priority: major feature broken for many users.'",
+    "confidence": 0.5,
+    "first_run": "tracker_triage-r01",
+    "last_seen_run": "tracker_triage-r01",
+    "seen": 1,
+    "tags": [
+      "500",
+      "issues",
+      "save",
+      "sev-2",
+      "title"
+    ]
+  },
+  {
+    "fact": "Issues with 'Minor alignment issue' in the title are 'sev-3'.",
+    "server": "tracker",
+    "source_tool": "tracker.list_labels",
+    "evidence": "Label 'sev-3' description: 'Priority: minor bug, cosmetic or copy.'",
+    "confidence": 0.9,
+    "first_run": "tracker_triage-r01",
+    "last_seen_run": "tracker_triage-r01",
+    "seen": 1,
+    "tags": [
+      "alignment",
+      "issue",
+      "issues",
+      "minor",
+      "sev-3",
+      "title"
+    ]
+  },
+  {
+    "fact": "Issue owners are determined by the module name in the issue title (e.g., '[search]' -> 'search') matching a member's 'owns' field.",
+    "server": "tracker",
+    "source_tool": "tracker.list_members",
+    "evidence": "Member 'm_03' owns ['search'], 'm_02' owns ['auth'], 'm_01' owns ['billing', 'exports'], 'm_04' owns ['mobile'].",
+    "confidence": 1.0,
+    "first_run": "tracker_triage-r01",
+    "last_seen_run": "tracker_triage-r01",
+    "seen": 1,
+    "tags": [
+      "determined",
+      "field",
+      "issue",
+      "matching",
+      "member",
+      "module",
+      "name",
+      "owners"
+    ]
+  },
+  {
+    "fact": "Issues with 'Add dark-mode icon' in the title are 'sev-3'.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Agent correctly labeled #205 and #206 as 'sev-3', and grader did not mark them incorrect.",
+    "confidence": 1.0,
+    "first_run": "tracker_triage-r02",
+    "last_seen_run": "tracker_triage-r02",
+    "seen": 1,
+    "tags": [
+      "add",
+      "dark-mode",
+      "icon",
+      "issues",
+      "sev-3",
+      "title"
+    ]
+  },
+  {
+    "fact": "Issues with 'Typo in mobile settings tooltip' in the title are 'sev-3' if there is a comment indicating customer escalation, otherwise they are 'sev-2'.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Issue #305 has title '[mobile] Typo in mobile settings tooltip' and comment 'Customer escalated.' (step 10). Grader says labels=['sev-3'] is incorrect. Issue #308 has title '[mobile] Typo in mobile settings tooltip' and no escalation comment. Grader implies it should be sev-2.",
+    "confidence": 0.4,
+    "first_run": "tracker_triage-r03",
+    "last_seen_run": "tracker_triage-r03",
+    "seen": 1,
+    "tags": [
+      "comment",
+      "customer",
+      "escalation",
+      "indicating",
+      "issues",
+      "mobile",
+      "otherwise",
+      "settings"
+    ]
+  },
+  {
+    "fact": "Issues with 'sync is broken' in the title are 'sev-2', not 'sev-1'.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Issue #303 has title '[exports] exports sync is broken for enterprise tenants'. Actor applied 'sev-1' (step 17). Grader says labels=['sev-1'] is incorrect.",
+    "confidence": 0.9,
+    "first_run": "tracker_triage-r03",
+    "last_seen_run": "tracker_triage-r03",
+    "seen": 1,
+    "tags": [
+      "broken",
+      "issues",
+      "not",
+      "sev-1",
+      "sev-2",
+      "sync",
+      "title"
+    ]
+  },
+  {
+    "fact": "Issues with 'Minor alignment issue' in the title are 'sev-3' unless they are duplicates.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Issue #307 has title '[auth] Minor alignment issue in auth header' and was marked duplicate. Grader says labels=['duplicate'] is incorrect, implying it should have been 'sev-3' if not a duplicate.",
+    "confidence": 0.7,
+    "first_run": "tracker_triage-r03",
+    "last_seen_run": "tracker_triage-r03",
+    "seen": 1,
+    "tags": [
+      "alignment",
+      "duplicates",
+      "issue",
+      "issues",
+      "minor",
+      "sev-3",
+      "they",
+      "title"
+    ]
+  },
+  {
+    "fact": "Issues with identical titles are considered duplicates ONLY if comments or details explicitly confirm it (e.g., 'duplicate of #X'). Otherwise, they are distinct issues.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Issues #306 and #307 have identical titles but no 'duplicate of' comment (steps 5-8). Actor marked #307 as duplicate. Grader says labels=['duplicate'] is incorrect for #307.",
+    "confidence": 0.9,
+    "first_run": "tracker_triage-r03",
+    "last_seen_run": "tracker_triage-r03",
+    "seen": 1,
+    "tags": [
+      "comments",
+      "confirm",
+      "considered",
+      "details",
+      "distinct",
+      "duplicate",
+      "duplicates",
+      "explicitly"
+    ]
+  },
+  {
+    "fact": "Issues indicating 'All users cannot log in' or 'Data loss' are considered 'sev-1' priority.",
+    "server": "tracker",
+    "source_tool": "tracker.list_issues",
+    "evidence": "Issue #402 title: '[mobile] All users cannot log in via mobile', Issue #405 title: '[exports] All users cannot log in via exports', Issue #408 title: '[mobile] Data loss after mobile migration'",
+    "confidence": 0.9,
+    "first_run": "tracker_triage-r04",
+    "last_seen_run": "tracker_triage-r04",
+    "seen": 1,
+    "tags": [
+      "cannot",
+      "considered",
+      "data",
+      "indicating",
+      "issues",
+      "log",
+      "loss",
+      "priority"
+    ]
+  },
+  {
+    "fact": "Issues with identical titles are only duplicates if explicitly confirmed in comments; otherwise, they are distinct and require full triage (label and assignee).",
+    "server": "tracker",
+    "source_tool": "tracker.list_comments",
+    "evidence": "Issue #409 has identical title to #401 but no 'duplicate of' comment, yet was not assigned an owner.",
+    "confidence": 0.9,
+    "first_run": "tracker_triage-r04",
+    "last_seen_run": "tracker_triage-r04",
+    "seen": 1,
+    "tags": [
+      "assignee",
+      "comments",
+      "confirmed",
+      "distinct",
+      "duplicates",
+      "explicitly",
+      "full",
+      "identical"
+    ]
+  },
+  {
+    "fact": "Issues with 'Export to CSV fails' in the title are 'sev-2'.",
+    "server": "tracker",
+    "source_tool": "tracker.list_issues",
+    "evidence": "issue 505: '[mobile] Export to CSV fails in mobile' -> 'sev-2'",
+    "confidence": 1.0,
+    "first_run": "tracker_triage-r05",
+    "last_seen_run": "tracker_triage-r05",
+    "seen": 1,
+    "tags": [
+      "csv",
+      "export",
+      "fails",
+      "issues",
+      "sev-2",
+      "title"
+    ]
+  },
+  {
+    "fact": "Issues with 'Improve empty-state copy' in the title are 'sev-3'.",
+    "server": "tracker",
+    "source_tool": "tracker.list_issues",
+    "evidence": "issue 506: '[mobile] Improve mobile empty-state copy' -> 'sev-3'; issue 507: '[auth] Improve auth empty-state copy' -> 'sev-3'; issue 508: '[auth] Improve auth empty-state copy' -> 'sev-3'",
+    "confidence": 1.0,
+    "first_run": "tracker_triage-r05",
+    "last_seen_run": "tracker_triage-r05",
+    "seen": 1,
+    "tags": [
+      "copy",
+      "empty-state",
+      "improve",
+      "issues",
+      "sev-3",
+      "title"
+    ]
+  },
+  {
+    "fact": "Issues with 'Typo in settings tooltip' in the title are 'sev-3', regardless of customer escalation comments.",
+    "server": "tracker",
+    "source_tool": "tracker.list_issues",
+    "evidence": "issue 512: '[auth] Typo in auth settings tooltip' -> 'sev-3' (no customer escalation comment)",
+    "confidence": 1.0,
+    "first_run": "tracker_triage-r05",
+    "last_seen_run": "tracker_triage-r05",
+    "seen": 1,
+    "tags": [
+      "comments",
+      "customer",
+      "escalation",
+      "issues",
+      "regardless",
+      "settings",
+      "sev-3",
+      "title"
+    ]
+  }
+]

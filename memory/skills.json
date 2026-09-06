@@ -1,1 +1,151 @@
-[]
+[
+  {
+    "name": "at_risk_pipeline_report",
+    "when": "Produce a report of at-risk deals from the CRM.",
+    "steps": [
+      "Call crm.list_deals({}) without a stage filter to retrieve all deals, following 'next_cursor' until all deals are retrieved.",
+      "Filter deals where 'stage' is 'qualified', 'negotiation', 'proposal', or any other stage identified as 'OPEN' (i.e., not 'closed_won' or 'closed_lost').",
+      "For each OPEN deal, call crm.get_deal({'deal_id': deal['id']}) to get detailed information.",
+      "For each OPEN deal, call crm.get_notes({'deal_id': deal['id']}) to check for additional risk signals in the notes.",
+      "Identify 'at-risk' deals: those with 'health' 'R' (Red), or those with 'health' 'A' (Amber) or 'G' (Green) that have specific risk indicators in crm.get_deal or crm.get_notes. Do NOT consider 'Follow-up on security questionnaire' in notes as a risk indicator.",
+      "For each at-risk deal, call crm.get_owner({'owner_id': deal['owner']}).",
+      "If the owner is found and 'active' is true, use their 'name'; otherwise, use 'UNASSIGNED'.",
+      "Compile the report with deal_id, owner, and a short reason for being at risk."
+    ],
+    "tools": [
+      "crm.list_deals",
+      "crm.get_deal",
+      "crm.get_notes",
+      "crm.get_owner"
+    ],
+    "servers": [
+      "crm"
+    ],
+    "family": "crm_at_risk",
+    "status": "candidate",
+    "proposed_run": "crm_at_risk-r05",
+    "version": 4,
+    "wins": 1,
+    "uses": 4,
+    "promoted_run": "crm_at_risk-r04",
+    "last_reverted_run": "crm_at_risk-r05",
+    "last_revert_reason": "quality fell 1.00 -> 0.80",
+    "previous_promoted": {
+      "name": "at_risk_pipeline_report",
+      "when": "Produce a report of at-risk deals from the CRM.",
+      "steps": [
+        "Call crm.list_deals({}) without a stage filter to retrieve all deals, following 'next_cursor' until all deals are retrieved.",
+        "Filter deals where 'stage' is 'qualified', 'negotiation', 'proposal', or any other stage identified as 'OPEN' (i.e., not 'closed_won' or 'closed_lost').",
+        "For each OPEN deal, call crm.get_deal({'deal_id': deal['id']}) to get detailed information.",
+        "For each OPEN deal, call crm.get_notes({'deal_id': deal['id']}) to check for additional risk signals in the notes.",
+        "Identify 'at-risk' deals: those with 'health' 'A' (Amber) or 'R' (Red). Do NOT consider 'Follow-up on security questionnaire' in notes as a risk indicator.",
+        "For each at-risk deal, call crm.get_owner({'owner_id': deal['owner']}).",
+        "If the owner is found and 'active' is true, use their 'name'; otherwise, use 'UNASSIGNED'.",
+        "Compile the report with deal_id, owner, and a short reason for being at risk."
+      ],
+      "tools": [
+        "crm.list_deals",
+        "crm.get_deal",
+        "crm.get_notes",
+        "crm.get_owner"
+      ],
+      "version": 3,
+      "promoted_run": "crm_at_risk-r04"
+    }
+  },
+  {
+    "name": "Triage Open Issues",
+    "when": "Triage open issues by assigning owner and priority label.",
+    "steps": [
+      "Call tracker.list_issues with status='open' and paginate through all results to get all open issues.",
+      "Call tracker.list_labels to get available labels and their descriptions.",
+      "Call tracker.list_members to get members and their owned modules.",
+      "For each issue, extract the module from the title (e.g., '[module] title').",
+      "Determine the assignee: Find the member whose 'owns' list contains the extracted module. If no module is found or no member owns it, assign null.",
+      "Determine the priority label based on keywords in the title: 'Production outage' or 'sync is broken' -> 'sev-1'; '500 on save' -> 'sev-1'; 'Minor alignment issue' or 'Add dark-mode icon' -> 'sev-3'; otherwise, 'sev-2'.",
+      "Before assigning or labeling, check for potential duplicates: if an issue title is similar to another, call tracker.get_issue and tracker.list_comments for both issues to confirm if they are duplicates. If confirmed, apply 'duplicate' label and do not assign an owner.",
+      "Call tracker.assign_issue with the determined member_id (if not null) and tracker.add_label with the determined label for each issue.",
+      "Report the list of triaged issues with their assigned labels and assignees."
+    ],
+    "tools": [
+      "tracker.list_issues",
+      "tracker.list_labels",
+      "tracker.list_members",
+      "tracker.get_issue",
+      "tracker.list_comments",
+      "tracker.assign_issue",
+      "tracker.add_label"
+    ],
+    "servers": [
+      "tracker"
+    ],
+    "family": "tracker_triage",
+    "status": "rejected",
+    "proposed_run": "tracker_triage-r02",
+    "version": 1,
+    "wins": 0,
+    "uses": 0,
+    "rejected_run": "tracker_triage-r03",
+    "reason": "quality fell 0.73 -> 0.64"
+  },
+  {
+    "name": "Triage Open Issues",
+    "when": "New open issues need priority labels and owners.",
+    "steps": [
+      "Call tracker.list_issues with status='open' and paginate to get all open issues.",
+      "Call tracker.list_labels to get available labels.",
+      "Call tracker.list_members to get available members and their ownerships.",
+      "For each issue:",
+      "  Extract the module name from the title (e.g., '[module] Title').",
+      "  Determine the assignee by matching the module name to a member's 'owns' field.",
+      "  Call tracker.list_comments for the issue to check for 'duplicate of #X' or other relevant information.",
+      "  If comments explicitly mark the issue as a duplicate, apply the 'duplicate' label and do not assign an owner.",
+      "  Otherwise, determine the priority label based on keywords in the title (e.g., 'Production outage', 'All users cannot log in', 'Data loss' -> 'sev-1'; '500 on save', 'Export to CSV fails' -> 'sev-2'; 'Improve empty-state copy', 'Typo in settings tooltip' -> 'sev-3').",
+      "  If not a duplicate, assign the determined owner and apply the determined priority label."
+    ],
+    "tools": [
+      "tracker.list_issues",
+      "tracker.list_labels",
+      "tracker.list_members",
+      "tracker.list_comments",
+      "tracker.add_label",
+      "tracker.assign_issue"
+    ],
+    "servers": [
+      "tracker"
+    ],
+    "family": "tracker_triage",
+    "status": "candidate",
+    "proposed_run": "tracker_triage-r05",
+    "version": 3,
+    "wins": 1,
+    "uses": 2,
+    "promoted_run": "tracker_triage-r05",
+    "previous_promoted": {
+      "name": "Triage Open Issues",
+      "when": "New open issues need priority labels and owners.",
+      "steps": [
+        "Call tracker.list_issues with status='open' and paginate to get all open issues.",
+        "Call tracker.list_labels to get available labels.",
+        "Call tracker.list_members to get available members and their ownerships.",
+        "For each issue:",
+        "  Extract the module name from the title (e.g., '[module] Title').",
+        "  Determine the assignee by matching the module name to a member's 'owns' field.",
+        "  Call tracker.list_comments for the issue to check for 'duplicate of #X' or other relevant information.",
+        "  If comments explicitly mark the issue as a duplicate, apply the 'duplicate' label and do not assign an owner.",
+        "  Otherwise, determine the priority label based on keywords in the title and comments (e.g., 'Production outage', 'All users cannot log in', 'Data loss' -> 'sev-1'; 'sync is broken', '500 on save' -> 'sev-2'; 'Minor alignment issue' -> 'sev-3'; 'Typo in mobile settings tooltip' with 'Customer escalated' -> 'sev-3', otherwise 'sev-2').",
+        "  If not a duplicate, assign the determined owner and apply the determined priority label."
+      ],
+      "tools": [
+        "tracker.list_issues",
+        "tracker.list_labels",
+        "tracker.list_members",
+        "tracker.list_comments",
+        "tracker.add_label",
+        "tracker.assign_issue"
+      ],
+      "version": 2,
+      "promoted_run": "tracker_triage-r05"
+    }
+  }
+]

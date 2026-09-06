@@ -1,0 +1,16 @@
+{
+ "facts_new": 3,
+ "conventions_new": 0,
+ "skill": {
+  "name": "at_risk_pipeline_report",
+  "status": "candidate",
+  "version": 2
+ },
+ "prompt_patch": true,
+ "facts_demoted": 1,
+ "cost_usd": 0.0053467,
+ "latency_s": 9.3972558749997,
+ "model": "gemini-2.5-flash",
+ "tokens": 4373,
+ "what_went_wrong": "The agent missed several at-risk deals because it did not check all possible 'OPEN' stages and did not use crm.get_notes to find risk signals."
+}

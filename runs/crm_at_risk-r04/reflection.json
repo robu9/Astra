@@ -1,0 +1,16 @@
+{
+ "facts_new": 2,
+ "conventions_new": 0,
+ "skill": {
+  "name": "at_risk_pipeline_report",
+  "status": "candidate",
+  "version": 4
+ },
+ "prompt_patch": false,
+ "facts_demoted": 0,
+ "cost_usd": 0.0050981,
+ "latency_s": 8.706083458999728,
+ "model": "gemini-2.5-flash",
+ "tokens": 5803,
+ "what_went_wrong": ""
+}
