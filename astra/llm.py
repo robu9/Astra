@@ -29,8 +29,10 @@ PRICES = {
     "gpt-5": (1.25, 10.00),
     "claude-3-5-haiku": (0.80, 4.00),
     "claude-sonnet-4": (3.00, 15.00),
+    "gemini-2.5-flash-lite": (0.10, 0.40),
     "gemini-2.5-flash": (0.30, 2.50),
     "gemini-2.5-pro": (1.25, 10.00),
+    "gemini-2.0-flash": (0.10, 0.40),
     "llama-3.1-8b": (0.05, 0.08),
     "llama-3.3-70b": (0.59, 0.79),
     "mock-fast": (0.10, 0.40),
@@ -175,6 +177,15 @@ def make_llm():
     if mode == "mock":
         from astra.mock_policy import scripted_policy
         return MockLLM(scripted_policy), {"fast": "mock-fast", "strong": "mock-strong"}
+    if mode == "gemini":
+        key = os.environ.get("ASTRA_LLM_API_KEY") or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        if not key:
+            raise SystemExit("ASTRA_LLM=gemini but no GEMINI_API_KEY / ASTRA_LLM_API_KEY set (put it in .env)")
+        return LLM(base_url=os.environ.get("ASTRA_LLM_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai"),
+                   api_key=key), {
+            "fast": os.environ.get("ASTRA_MODEL_FAST", "gemini-2.5-flash"),
+            "strong": os.environ.get("ASTRA_MODEL_STRONG", "gemini-2.5-pro"),
+        }
     models = {
         "fast": os.environ.get("ASTRA_MODEL_FAST", "gpt-4o-mini"),
         "strong": os.environ.get("ASTRA_MODEL_STRONG", "gpt-4o"),
