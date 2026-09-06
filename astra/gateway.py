@@ -32,7 +32,7 @@ class CallRecord:
     result: Any = field(default=None, repr=False)
 
 
-def _preview(value: Any, limit: int = 600) -> str:
+def _preview(value: Any, limit: int = 3500) -> str:
     try:
         s = json.dumps(value, default=str)
     except Exception:

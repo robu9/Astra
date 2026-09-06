@@ -35,17 +35,19 @@ class Controller:
         last_ok = bool(eps) and eps[-1].get("success") is True
         last_bad = bool(eps) and eps[-1].get("quality", 0) < 0.4
 
+        # Step budgets scale with how many tool calls the last successful run actually needed.
+        base = max(20, int(1.5 * max((e.get("tool_calls", 0) for e in eps), default=0)) + 6)
         if skills and known_ratio >= 0.5 and last_ok:
-            return Budget(self.models["fast"], "fast", max_steps=8, max_tokens_reply=900, mode="skilled",
+            return Budget(self.models["fast"], "fast", max_steps=base, max_tokens_reply=900, mode="skilled",
                           reason=f"promoted skill v{skills[0].get('version', 1)}, {known_ratio:.0%} tools known, last run succeeded")
         if eps and last_bad:
-            return Budget(self.models["strong"], "strong", max_steps=14, max_tokens_reply=1400, mode="recovering",
+            return Budget(self.models["strong"], "strong", max_steps=base + 10, max_tokens_reply=1400, mode="recovering",
                           reason="last run scored poorly; escalating model and step budget")
         if not eps:
-            return Budget(self.models["strong"], "strong", max_steps=14, max_tokens_reply=1400, mode="novel",
+            return Budget(self.models["strong"], "strong", max_steps=30, max_tokens_reply=1400, mode="novel",
                           reason="no prior episodes for this task on these tools")
         return Budget(self.models["fast"] if known_ratio >= 0.5 else self.models["strong"],
-                      "fast" if known_ratio >= 0.5 else "strong", max_steps=11, max_tokens_reply=1100,
+                      "fast" if known_ratio >= 0.5 else "strong", max_steps=base + 4, max_tokens_reply=1100,
                       mode="novel" if known_ratio < 0.5 else "skilled",
                       reason=f"{known_ratio:.0%} tools known, no promoted skill yet")
 

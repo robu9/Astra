@@ -120,7 +120,11 @@ class SkillStore:
                 run_id: str, family: str) -> dict:
         for s in self.skills:
             if s["family"] == family and set(s["servers"]) == set(servers) and s["status"] != "rejected":
-                s.update({"name": name, "when": when, "steps": steps, "tools": tools, "status": "candidate",
+                if s["steps"] == steps and s["tools"] == tools:
+                    return s  # nothing new learned; keep status as is
+                # promoted skills are revised in place (revision is judged next run via episodic quality);
+                # candidates stay candidates until the next run confirms them
+                s.update({"name": name, "when": when, "steps": steps, "tools": tools,
                           "proposed_run": run_id, "version": s.get("version", 1) + 1})
                 _save(self.path, self.skills)
                 return s

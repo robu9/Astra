@@ -73,6 +73,8 @@ def tool(description: str, schema: dict | None = None):
         if schema is None:
             props, req = {}, []
             for p in inspect.signature(fn).parameters.values():
+                if p.name in ("self", "cls"):
+                    continue
                 t = {int: "integer", float: "number", bool: "boolean", str: "string", list: "array", dict: "object"}
                 props[p.name] = {"type": t.get(p.annotation, "string")}
                 if p.default is inspect._empty:
