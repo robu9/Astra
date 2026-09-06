@@ -23,29 +23,33 @@
   },
   "crm.get_owner": {
     "description": "Get one owner by id.",
-    "calls": 0,
-    "ok": 0,
+    "calls": 2,
+    "ok": 2,
     "errors": 0,
-    "latency_total": 0.0,
+    "latency_total": 0.0006,
     "error_signatures": {},
-    "conventions": [],
+    "conventions": [
+      "The 'active' field indicates if an owner is currently active. Inactive owners should be treated as 'UNASSIGNED' for reporting purposes."
+    ],
     "probed": false,
     "shape": null
   },
   "crm.list_deals": {
     "description": "List deals. Paginated: pass the returned next_cursor to get the next page. Optional stage filter.",
-    "calls": 8,
-    "ok": 7,
-    "errors": 1,
-    "latency_total": 0.0067,
+    "calls": 17,
+    "ok": 14,
+    "errors": 3,
+    "latency_total": 0.0131,
     "error_signatures": {
-      "invalid stage '*'": 1
+      "invalid stage '*'": 3
     },
     "conventions": [
       "The 'stage' argument requires specific stage names (e.g., 'qualified', 'negotiation') rather than general terms like 'OPEN'.",
       "Pagination is handled by passing the 'next_cursor' value from a previous response as the 'cursor' argument in subsequent calls until 'next_cursor' is null or absent.",
       "The 'owner' field in the response is an ID (e.g., 'u_08') and requires crm.get_owner to resolve to a name.",
-      "The 'health' field is a single character code (e.g., 'G', 'R', 'A')."
+      "The 'health' field is a single character code (e.g., 'G', 'R', 'A').",
+      "The 'stage' argument only accepts specific valid stage names; 'OPEN' is not accepted directly, nor are 'discovery' or 'prospecting'. Calling without a 'stage' argument returns all deals, including closed ones.",
+      "Pagination is handled using 'next_cursor' in the response and 'cursor' in the request. The agent must continue calling with the 'cursor' until 'next_cursor' is null."
     ],
     "probed": true,
     "shape": "object keys=['items', 'next_cursor', 'total']; items[0] keys=['amount', 'company', 'currency', 'health', 'id', 'owner', 'stage']"

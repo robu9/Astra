@@ -24,10 +24,10 @@
     "server": "crm",
     "source_tool": "crm.list_deals",
     "evidence": "Grader feedback: missed deal ids: ['d_0103'] (inspect them: why are they at risk?) and d_0103 has health 'A'",
-    "confidence": 0.4,
+    "confidence": 0.55,
     "first_run": "crm_at_risk-r01",
-    "last_seen_run": "crm_at_risk-r01",
-    "seen": 1,
+    "last_seen_run": "crm_at_risk-r03",
+    "seen": 2,
     "tags": [
       "amber",
       "considered",
@@ -94,7 +94,7 @@
     "server": "crm",
     "source_tool": "crm.list_deals",
     "evidence": "not actually at risk: ['d_0202'] (health was Amber)",
-    "confidence": 1.0,
+    "confidence": 0.6,
     "first_run": "crm_at_risk-r02",
     "last_seen_run": "crm_at_risk-r02",
     "seen": 1,
@@ -146,6 +146,135 @@
       "negotiation",
       "not",
       "open"
+    ]
+  },
+  {
+    "fact": "An owner is considered invalid if their 'active' status is false; in such cases, the owner should be reported as 'UNASSIGNED'.",
+    "server": "crm",
+    "source_tool": "crm.get_owner",
+    "evidence": "crm.get_owner for u_05 returned {'active': false}, and grader feedback indicated owner was correct on only 1/2 at-risk deals.",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r03",
+    "last_seen_run": "crm_at_risk-r03",
+    "seen": 1,
+    "tags": [
+      "active",
+      "cases",
+      "considered",
+      "false",
+      "invalid",
+      "owner",
+      "reported",
+      "should"
+    ]
+  },
+  {
+    "fact": "The 'discovery' stage is not a valid argument for crm.list_deals.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "crm.list_deals({\"stage\": \"discovery\"}) -> ERROR: invalid stage 'discovery'",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r03",
+    "last_seen_run": "crm_at_risk-r03",
+    "seen": 1,
+    "tags": [
+      "argument",
+      "crm",
+      "discovery",
+      "list_deals",
+      "not",
+      "stage",
+      "valid"
+    ]
+  },
+  {
+    "fact": "The 'prospecting' stage is not a valid argument for crm.list_deals.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "crm.list_deals({\"stage\": \"prospecting\"}) -> ERROR: invalid stage 'prospecting'",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r03",
+    "last_seen_run": "crm_at_risk-r03",
+    "seen": 1,
+    "tags": [
+      "argument",
+      "crm",
+      "list_deals",
+      "not",
+      "prospecting",
+      "stage",
+      "valid"
+    ]
+  },
+  {
+    "fact": "The 'proposal' stage represents an OPEN deal.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "crm.list_deals({\"stage\": \"proposal\"}) returned deals that were considered open.",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r03",
+    "last_seen_run": "crm_at_risk-r03",
+    "seen": 1,
+    "tags": [
+      "deal",
+      "open",
+      "proposal",
+      "represents",
+      "stage"
+    ]
+  },
+  {
+    "fact": "The crm.list_deals tool, when called without a 'stage' argument, returns all deals (open and closed) and supports pagination.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "crm.list_deals({}) returned a list of deals with 'next_cursor' and included 'closed_won' and 'closed_lost' stages.",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r03",
+    "last_seen_run": "crm_at_risk-r03",
+    "seen": 1,
+    "tags": [
+      "argument",
+      "called",
+      "closed",
+      "crm",
+      "deals",
+      "list_deals",
+      "open",
+      "pagination"
+    ]
+  },
+  {
+    "fact": "The 'closed_won' stage represents a CLOSED deal.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "crm.list_deals({}) returned deals with 'closed_won' stage.",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r03",
+    "last_seen_run": "crm_at_risk-r03",
+    "seen": 1,
+    "tags": [
+      "closed",
+      "closed_won",
+      "deal",
+      "represents",
+      "stage"
+    ]
+  },
+  {
+    "fact": "The 'closed_lost' stage represents a CLOSED deal.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "crm.list_deals({}) returned deals with 'closed_lost' stage.",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r03",
+    "last_seen_run": "crm_at_risk-r03",
+    "seen": 1,
+    "tags": [
+      "closed",
+      "closed_lost",
+      "deal",
+      "represents",
+      "stage"
     ]
   }
 ]

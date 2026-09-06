@@ -1,0 +1,16 @@
+{
+ "facts_new": 7,
+ "conventions_new": 3,
+ "skill": {
+  "name": "get_at_risk_deals",
+  "status": "candidate",
+  "version": 1
+ },
+ "prompt_patch": true,
+ "facts_demoted": 1,
+ "cost_usd": 0.0064874,
+ "latency_s": 11.37697449999996,
+ "model": "gemini-2.5-flash",
+ "tokens": 5352,
+ "what_went_wrong": "The agent missed one at-risk deal because it incorrectly filtered by health status and did not correctly handle inactive owners."
+}
