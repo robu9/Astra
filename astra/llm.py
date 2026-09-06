@@ -96,6 +96,9 @@ class LLM:
         }
         if json_mode:
             body["response_format"] = {"type": "json_object"}
+        effort = os.environ.get("ASTRA_REASONING_EFFORT")
+        if effort:
+            body["reasoning_effort"] = effort  # honoured by Gemini/OpenAI reasoning models, ignored elsewhere
         data = json.dumps(body).encode("utf-8")
         req = urllib.request.Request(
             f"{self.base_url}/chat/completions",
@@ -118,6 +121,8 @@ class LLM:
         usage = payload.get("usage") or {}
         pt = int(usage.get("prompt_tokens") or sum(estimate_tokens(m.get("content", "")) for m in messages))
         ct = int(usage.get("completion_tokens") or estimate_tokens(text))
+        if usage.get("total_tokens"):
+            ct = max(ct, int(usage["total_tokens"]) - pt)  # include billed reasoning/thinking tokens
         pin, pout = price_for(model)
         cost = (pt * pin + ct * pout) / 1_000_000
         return LLMResult(text=text, model=model, prompt_tokens=pt, completion_tokens=ct, latency_s=latency,
@@ -181,6 +186,7 @@ def make_llm():
         key = os.environ.get("ASTRA_LLM_API_KEY") or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
         if not key:
             raise SystemExit("ASTRA_LLM=gemini but no GEMINI_API_KEY / ASTRA_LLM_API_KEY set (put it in .env)")
+        os.environ.setdefault("ASTRA_REASONING_EFFORT", "low")
         return LLM(base_url=os.environ.get("ASTRA_LLM_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai"),
                    api_key=key), {
             "fast": os.environ.get("ASTRA_MODEL_FAST", "gemini-2.5-flash"),
