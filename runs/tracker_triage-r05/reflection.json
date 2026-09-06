@@ -1,0 +1,12 @@
+{
+ "facts_new": 4,
+ "conventions_new": 0,
+ "skill": null,
+ "prompt_patch": true,
+ "facts_demoted": 7,
+ "cost_usd": 0.0066521,
+ "latency_s": 11.019546700001229,
+ "model": "gemini-2.5-flash",
+ "tokens": 5549,
+ "what_went_wrong": "The agent incorrectly applied special handling rules for critical issues like 'Production outage', 'Data loss', and '500 errors', which were based on incorrect prior facts."
+}

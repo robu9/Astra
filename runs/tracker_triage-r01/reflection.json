@@ -1,0 +1,16 @@
+{
+ "facts_new": 4,
+ "conventions_new": 1,
+ "skill": {
+  "name": "Triage Open Issues",
+  "status": "candidate",
+  "version": 1
+ },
+ "prompt_patch": true,
+ "facts_demoted": 0,
+ "cost_usd": 0.0059318,
+ "latency_s": 10.534629500005394,
+ "model": "gemini-2.5-flash",
+ "tokens": 4974,
+ "what_went_wrong": "The agent incorrectly assigned the priority label and owner for issue #106, which was a production outage."
+}

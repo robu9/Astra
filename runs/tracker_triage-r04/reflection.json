@@ -1,0 +1,12 @@
+{
+ "facts_new": 2,
+ "conventions_new": 0,
+ "skill": null,
+ "prompt_patch": true,
+ "facts_demoted": 2,
+ "cost_usd": 0.0052788999999999996,
+ "latency_s": 9.250391600013245,
+ "model": "gemini-2.5-flash",
+ "tokens": 4235,
+ "what_went_wrong": "The agent failed to correctly apply priority labels and assignees for most issues, indicating a misunderstanding of which issues require special handling (no label/assignee) versus standard triage."
+}

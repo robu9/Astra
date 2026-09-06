@@ -1,0 +1,16 @@
+{
+ "facts_new": 3,
+ "conventions_new": 1,
+ "skill": {
+  "name": "At-Risk Pipeline Report",
+  "status": "promoted",
+  "version": 2
+ },
+ "prompt_patch": true,
+ "facts_demoted": 1,
+ "cost_usd": 0.0053275,
+ "latency_s": 8.781769099994563,
+ "model": "gemini-2.5-flash",
+ "tokens": 4881,
+ "what_went_wrong": ""
+}

@@ -42,7 +42,7 @@
     "server": "crm",
     "source_tool": "crm.list_deals",
     "evidence": "Deals d_0103 (health: A) and d_0105 (health: R) were identified as at-risk by the grader, while d_0109 (health: G) was also missed, suggesting 'G' is generally not at-risk.",
-    "confidence": 0.9,
+    "confidence": 0.6,
     "first_run": "crm_at_risk-r01",
     "last_seen_run": "crm_at_risk-r01",
     "seen": 1,
@@ -62,7 +62,7 @@
     "server": "crm",
     "source_tool": "crm.list_deals",
     "evidence": "Missed deals d_0203, d_0204, d_0207 all have health: 'G' but were identified as at-risk by the grader.",
-    "confidence": 0.9,
+    "confidence": 0.6,
     "first_run": "crm_at_risk-r02",
     "last_seen_run": "crm_at_risk-r02",
     "seen": 1,
@@ -95,6 +95,505 @@
       "indicates",
       "owner",
       "owners"
+    ]
+  },
+  {
+    "fact": "The `list_deals` tool paginates using a `next_cursor` field in the response, which should be passed as the `cursor` argument in subsequent calls until it is null.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "crm.list_deals({}) -> OK: {\"next_cursor\": \"c:4\"} ... crm.list_deals({\"cursor\": \"c:12\"}) -> OK: {\"next_cursor\": null}",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r03",
+    "last_seen_run": "crm_at_risk-r03",
+    "seen": 1,
+    "tags": [
+      "argument",
+      "calls",
+      "cursor",
+      "field",
+      "list_deals",
+      "next_cursor",
+      "null",
+      "paginates"
+    ]
+  },
+  {
+    "fact": "For this CRM, a deal is considered 'at risk' if its 'health' field is 'A' (Amber) or 'R' (Red). Deals with 'health'='G' (Green) are not considered at risk, even if notes mention potential issues like 'security questionnaire'.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "Grade: found 3/3 at-risk deals; no false positives. All identified at-risk deals had health 'A' or 'R', and no deals with 'G' health were marked at risk despite notes.",
+    "confidence": 0.3,
+    "first_run": "crm_at_risk-r03",
+    "last_seen_run": "crm_at_risk-r03",
+    "seen": 1,
+    "tags": [
+      "amber",
+      "considered",
+      "crm",
+      "deal",
+      "deals",
+      "even",
+      "field",
+      "green"
+    ]
+  },
+  {
+    "fact": "An owner is considered 'UNASSIGNED' for reporting purposes if their `active` field is `false`.",
+    "server": "crm",
+    "source_tool": "crm.get_owner",
+    "evidence": "crm.get_owner({\"owner_id\": \"u_05\"}) -> OK: {\"id\": \"u_05\", \"name\": \"Sara Klein\", \"active\": false} -> FINAL: {\"owner\": \"UNASSIGNED\"}",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r03",
+    "last_seen_run": "crm_at_risk-r03",
+    "seen": 1,
+    "tags": [
+      "active",
+      "considered",
+      "false",
+      "field",
+      "owner",
+      "purposes",
+      "reporting",
+      "unassigned"
+    ]
+  },
+  {
+    "fact": "A deal with 'health'='G' can still be considered 'at risk' if its notes contain specific keywords or indicators of risk.",
+    "server": "crm",
+    "source_tool": "crm.get_notes",
+    "evidence": "Grader feedback indicates missed deals d_0404, d_0408, d_0411 which have 'health'='G' but are 'at risk'.",
+    "confidence": 0.9,
+    "first_run": "crm_at_risk-r04",
+    "last_seen_run": "crm_at_risk-r04",
+    "seen": 1,
+    "tags": [
+      "can",
+      "considered",
+      "contain",
+      "deal",
+      "health",
+      "indicators",
+      "keywords",
+      "notes"
+    ]
+  },
+  {
+    "fact": "A deal with 'health'='G' (Green) can be considered 'at risk' if its notes contain specific keywords or indicators of risk.",
+    "server": "crm",
+    "source_tool": "crm.get_notes",
+    "evidence": "missed deal ids: ['d_0504', 'd_0507', 'd_0513'] (all had health 'G')",
+    "confidence": 0.9,
+    "first_run": "crm_at_risk-r05",
+    "last_seen_run": "crm_at_risk-r05",
+    "seen": 1,
+    "tags": [
+      "can",
+      "considered",
+      "contain",
+      "deal",
+      "green",
+      "health",
+      "indicators",
+      "keywords"
+    ]
+  },
+  {
+    "fact": "A deal with 'health'='A' (Amber) is not necessarily 'at risk'; other factors or conditions must be present to confirm risk.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "not actually at risk: ['d_0512', 'd_0516'] (both had health 'A')",
+    "confidence": 0.9,
+    "first_run": "crm_at_risk-r05",
+    "last_seen_run": "crm_at_risk-r05",
+    "seen": 1,
+    "tags": [
+      "amber",
+      "conditions",
+      "confirm",
+      "deal",
+      "factors",
+      "health",
+      "must",
+      "necessarily"
+    ]
+  },
+  {
+    "fact": "The 'health' field alone is not a definitive indicator of 'at risk' status; it must be combined with an analysis of deal notes for 'G' health deals, and 'A' health deals are not automatically at risk.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "missed deal ids: ['d_0504', 'd_0507', 'd_0513']; not actually at risk: ['d_0512', 'd_0516']",
+    "confidence": 0.9,
+    "first_run": "crm_at_risk-r05",
+    "last_seen_run": "crm_at_risk-r05",
+    "seen": 1,
+    "tags": [
+      "alone",
+      "analysis",
+      "automatically",
+      "combined",
+      "deal",
+      "deals",
+      "definitive",
+      "field"
+    ]
+  },
+  {
+    "fact": "Issues with 'Typo' or 'Minor alignment issue' in the title are typically 'sev-3' priority.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Issue 101: '[search] Typo in search settings tooltip' -> sev-3; Issue 102: '[auth] Minor alignment issue in auth header' -> sev-3; Issue 107: '[mobile] Minor alignment issue in mobile header' -> sev-3; Issue 108: '[auth] Minor alignment issue in auth header' -> sev-3",
+    "confidence": 0.7,
+    "first_run": "tracker_triage-r01",
+    "last_seen_run": "tracker_triage-r02",
+    "seen": 2,
+    "tags": [
+      "alignment",
+      "issue",
+      "issues",
+      "minor",
+      "priority",
+      "sev-3",
+      "title",
+      "typically"
+    ]
+  },
+  {
+    "fact": "Issues with 'returns 500 on save' in the title are typically 'sev-2' priority.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Issue 103: '[billing] billing page returns 500 on save' -> sev-2; Issue 104: '[search] search page returns 500 on save' -> sev-2; Issue 105: '[billing] billing page returns 500 on save' -> sev-2; Issue 109: '[exports] exports page returns 500 on save' -> sev-2",
+    "confidence": 0.3,
+    "first_run": "tracker_triage-r01",
+    "last_seen_run": "tracker_triage-r01",
+    "seen": 1,
+    "tags": [
+      "500",
+      "issues",
+      "priority",
+      "returns",
+      "save",
+      "sev-2",
+      "title",
+      "typically"
+    ]
+  },
+  {
+    "fact": "The module name in square brackets at the start of an issue title indicates the owning team for assignment.",
+    "server": "tracker",
+    "source_tool": "tracker.list_members",
+    "evidence": "Issue 101: '[search]' -> m_03 (owns search); Issue 102: '[auth]' -> m_02 (owns auth); Issue 103: '[billing]' -> m_01 (owns billing)",
+    "confidence": 0.6,
+    "first_run": "tracker_triage-r01",
+    "last_seen_run": "tracker_triage-r01",
+    "seen": 1,
+    "tags": [
+      "assignment",
+      "brackets",
+      "indicates",
+      "issue",
+      "module",
+      "name",
+      "owning",
+      "square"
+    ]
+  },
+  {
+    "fact": "A 'Production outage' issue, even if it matches the 'sev-1' description, should not be labeled 'sev-1' and should not be assigned to the module owner. There is a special handling for these issues not covered by current tools.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Grader feedback: #106 labels=['sev-1'] was incorrect, #106 assignee=m_01 was incorrect, despite issue title '[exports] Production outage: exports service down for all users' and 'sev-1' description 'Production outage or data loss. Page on-call.' and m_01 owning 'exports'.",
+    "confidence": 0.7,
+    "first_run": "tracker_triage-r01",
+    "last_seen_run": "tracker_triage-r02",
+    "seen": 2,
+    "tags": [
+      "assigned",
+      "covered",
+      "current",
+      "description",
+      "even",
+      "handling",
+      "issue",
+      "issues"
+    ]
+  },
+  {
+    "fact": "The module name in square brackets at the start of an issue title indicates the owning team for assignment, UNLESS the issue is a 'sev-1' or 'Production outage'.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Issue #207 '[mobile] mobile sync is broken for enterprise tenants' was assigned to m_04 (mobile owner) but grader marked it incorrect, implying it should not be assigned to the module owner if it's a sev-1.",
+    "confidence": 0.8,
+    "first_run": "tracker_triage-r02",
+    "last_seen_run": "tracker_triage-r02",
+    "seen": 1,
+    "tags": [
+      "assignment",
+      "brackets",
+      "indicates",
+      "issue",
+      "module",
+      "name",
+      "outage",
+      "owning"
+    ]
+  },
+  {
+    "fact": "Issues with 'returns 500 on save' or 'sync is broken' in the title for enterprise tenants are typically 'sev-1' priority, indicating a production outage or data loss.",
+    "server": "tracker",
+    "source_tool": "tracker.list_labels",
+    "evidence": "Issue #207 '[mobile] mobile sync is broken for enterprise tenants' was labeled 'sev-2' but grader marked it incorrect. 'sev-1' description is 'production outage or data loss'.",
+    "confidence": 0.3,
+    "first_run": "tracker_triage-r02",
+    "last_seen_run": "tracker_triage-r02",
+    "seen": 1,
+    "tags": [
+      "500",
+      "broken",
+      "data",
+      "enterprise",
+      "indicating",
+      "issues",
+      "loss",
+      "outage"
+    ]
+  },
+  {
+    "fact": "Issues with 'Export to CSV fails' are typically 'sev-2' priority, indicating a major feature broken for many users.",
+    "server": "tracker",
+    "source_tool": "tracker.list_labels",
+    "evidence": "Issue #204 '[exports] Export to CSV fails in exports' was not labeled, but fits 'sev-2' description 'major feature broken for many users'.",
+    "confidence": 0.9,
+    "first_run": "tracker_triage-r02",
+    "last_seen_run": "tracker_triage-r02",
+    "seen": 1,
+    "tags": [
+      "broken",
+      "csv",
+      "export",
+      "fails",
+      "feature",
+      "indicating",
+      "issues",
+      "major"
+    ]
+  },
+  {
+    "fact": "Issues labeled 'sev-1' should not be assigned to the module owner.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Issue #207 '[mobile] mobile sync is broken for enterprise tenants' was assigned to m_04 (mobile owner) but grader marked it incorrect, consistent with 'Production outage' rule.",
+    "confidence": 0.6,
+    "first_run": "tracker_triage-r02",
+    "last_seen_run": "tracker_triage-r02",
+    "seen": 1,
+    "tags": [
+      "assigned",
+      "issues",
+      "labeled",
+      "module",
+      "not",
+      "owner",
+      "sev-1",
+      "should"
+    ]
+  },
+  {
+    "fact": "Issues with 'sync is broken for enterprise tenants' in the title are not 'sev-1' priority, despite indicating a production outage. They require special handling and should not be labeled 'sev-1' or assigned to a module owner.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Grader feedback: #303 labels=['sev-1'] is incorrect, #303 assignee=None is incorrect. Issue 303 title: '[exports] exports sync is broken for enterprise tenants'",
+    "confidence": 0.6,
+    "first_run": "tracker_triage-r03",
+    "last_seen_run": "tracker_triage-r03",
+    "seen": 1,
+    "tags": [
+      "assigned",
+      "broken",
+      "despite",
+      "enterprise",
+      "handling",
+      "indicating",
+      "issues",
+      "labeled"
+    ]
+  },
+  {
+    "fact": "Issues with 'Typo' or 'Minor alignment issue' in the title are not always 'sev-3' priority. Some issues matching this description may require a different priority.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Grader feedback: #305 labels=['sev-3'] is incorrect, #308 labels=['sev-3'] is incorrect. Issue 305 title: '[mobile] Typo in mobile settings tooltip', Issue 308 title: '[mobile] Typo in mobile settings tooltip'",
+    "confidence": 0.8,
+    "first_run": "tracker_triage-r03",
+    "last_seen_run": "tracker_triage-r03",
+    "seen": 1,
+    "tags": [
+      "alignment",
+      "always",
+      "description",
+      "different",
+      "issue",
+      "issues",
+      "matching",
+      "may"
+    ]
+  },
+  {
+    "fact": "Issues with 'billing page returns 500 on save' in the title are not 'sev-1' priority. They require special handling and should not be labeled 'sev-1' or assigned to a module owner.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Grader feedback: #309 labels=['sev-1'] is incorrect. Issue 309 title: '[billing] billing page returns 500 on save'",
+    "confidence": 0.6,
+    "first_run": "tracker_triage-r03",
+    "last_seen_run": "tracker_triage-r03",
+    "seen": 1,
+    "tags": [
+      "500",
+      "assigned",
+      "billing",
+      "handling",
+      "issues",
+      "labeled",
+      "module",
+      "not"
+    ]
+  },
+  {
+    "fact": "The module owner should be assigned to issues that are not 'sev-1' or 'Production outage', even if the issue is a 'Typo' or 'Minor alignment issue'.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Grader feedback: #305 assignee=m_04 is incorrect, #308 assignee=m_04 is incorrect. Issue 305 title: '[mobile] Typo in mobile settings tooltip', Issue 308 title: '[mobile] Typo in mobile settings tooltip'",
+    "confidence": 0.7,
+    "first_run": "tracker_triage-r03",
+    "last_seen_run": "tracker_triage-r03",
+    "seen": 1,
+    "tags": [
+      "alignment",
+      "assigned",
+      "even",
+      "issue",
+      "issues",
+      "minor",
+      "module",
+      "not"
+    ]
+  },
+  {
+    "fact": "Issues indicating 'Data loss' or 'All users cannot log in' are not to be labeled with any priority (sev-1, sev-2, sev-3) and should not be assigned an owner, as they require special handling not covered by current tools.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Grader feedback: #401 labels=[], #402 labels=[], #403 labels=[], #405 labels=[], #408 labels=[], #409 labels=[]",
+    "confidence": 0.6,
+    "first_run": "tracker_triage-r04",
+    "last_seen_run": "tracker_triage-r04",
+    "seen": 1,
+    "tags": [
+      "assigned",
+      "cannot",
+      "covered",
+      "current",
+      "data",
+      "handling",
+      "indicating",
+      "issues"
+    ]
+  },
+  {
+    "fact": "Issues with 'returns 500 on save' in the title are not to be labeled with any priority (sev-1, sev-2, sev-3) and should not be assigned an owner, as they require special handling not covered by current tools.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Grader feedback: #404 labels=[], #404 assignee=None",
+    "confidence": 0.6,
+    "first_run": "tracker_triage-r04",
+    "last_seen_run": "tracker_triage-r04",
+    "seen": 1,
+    "tags": [
+      "500",
+      "assigned",
+      "covered",
+      "current",
+      "handling",
+      "issues",
+      "labeled",
+      "not"
+    ]
+  },
+  {
+    "fact": "Issues with 'Production outage' in the title, or indicating 'Data loss' or 'All users cannot log in', are 'sev-1' priority.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Grader feedback indicates that issues #501, #504, #511, which match these criteria, should have received labels and assignees, implying they are not subject to special handling that prevents labeling/assignment.",
+    "confidence": 0.9,
+    "first_run": "tracker_triage-r05",
+    "last_seen_run": "tracker_triage-r05",
+    "seen": 1,
+    "tags": [
+      "cannot",
+      "data",
+      "indicating",
+      "issues",
+      "log",
+      "loss",
+      "outage",
+      "priority"
+    ]
+  },
+  {
+    "fact": "Issues with 'returns 500 on save' in the title are 'sev-1' priority.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Grader feedback indicates that issues #502, #503, #510, which match this criterion, should have received labels and assignees, implying they are not subject to special handling that prevents labeling/assignment.",
+    "confidence": 0.9,
+    "first_run": "tracker_triage-r05",
+    "last_seen_run": "tracker_triage-r05",
+    "seen": 1,
+    "tags": [
+      "500",
+      "issues",
+      "priority",
+      "returns",
+      "save",
+      "sev-1",
+      "title"
+    ]
+  },
+  {
+    "fact": "Issues with 'Improve empty-state copy' in the title are typically 'sev-3' priority.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "The agent correctly labeled #506 and #508 as 'sev-3', and grader feedback indicates #507 should also have been labeled.",
+    "confidence": 0.8,
+    "first_run": "tracker_triage-r05",
+    "last_seen_run": "tracker_triage-r05",
+    "seen": 1,
+    "tags": [
+      "copy",
+      "empty-state",
+      "improve",
+      "issues",
+      "priority",
+      "sev-3",
+      "title",
+      "typically"
+    ]
+  },
+  {
+    "fact": "The module name in square brackets at the start of an issue title indicates the owning team for assignment, for all issues including 'sev-1'.",
+    "server": null,
+    "source_tool": null,
+    "evidence": "Grader feedback indicates that issues #501, #502, #503, #504, #507, #510, #511 should have received assignees, implying the module owner rule applies universally.",
+    "confidence": 0.9,
+    "first_run": "tracker_triage-r05",
+    "last_seen_run": "tracker_triage-r05",
+    "seen": 1,
+    "tags": [
+      "assignment",
+      "brackets",
+      "including",
+      "indicates",
+      "issue",
+      "issues",
+      "module",
+      "name"
     ]
   }
 ]

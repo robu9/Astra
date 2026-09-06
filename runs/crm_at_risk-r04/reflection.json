@@ -1,0 +1,12 @@
+{
+ "facts_new": 1,
+ "conventions_new": 0,
+ "skill": null,
+ "prompt_patch": true,
+ "facts_demoted": 1,
+ "cost_usd": 0.0048604,
+ "latency_s": 8.066707799996948,
+ "model": "gemini-2.5-flash",
+ "tokens": 4446,
+ "what_went_wrong": "The actor failed to call `crm.get_notes` for deals with 'health'='G' to determine if they were at risk, despite a prompt patch instructing it to do so, leading to missed at-risk deals."
+}

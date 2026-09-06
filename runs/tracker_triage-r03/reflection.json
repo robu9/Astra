@@ -1,0 +1,16 @@
+{
+ "facts_new": 4,
+ "conventions_new": 0,
+ "skill": {
+  "name": "Triage Open Issues",
+  "status": "candidate",
+  "version": 1
+ },
+ "prompt_patch": true,
+ "facts_demoted": 0,
+ "cost_usd": 0.0058479,
+ "latency_s": 9.322636500000954,
+ "model": "gemini-2.5-flash",
+ "tokens": 5149,
+ "what_went_wrong": "Several existing facts about priority labeling and assignment for 'sev-1' and 'sev-3' issues were incorrect or incomplete, leading to mislabeling and incorrect assignment decisions."
+}

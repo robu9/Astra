@@ -72,6 +72,42 @@ class RunTrace:
         return "\n".join(lines)
 
 
+FINAL_KEYS = ("final", "final_answer", "answer", "result", "output", "response")
+TOOL_KEYS = ("tool", "tool_name", "name", "action", "function", "call")
+ARG_KEYS = ("args", "arguments", "parameters", "params", "input", "inputs")
+
+
+def normalize_reply(reply: dict) -> dict:
+    """Coerce the many JSON shapes models emit into {"thought", "tool", "args"} or {"thought", "final"}."""
+    if not isinstance(reply, dict):
+        return {"thought": str(reply)[:200], "final": reply}
+    out = {"thought": str(reply.get("thought") or reply.get("reasoning") or "")[:400]}
+    if reply.get("parse_error"):
+        out["parse_error"] = True
+    # nested tool-call containers: {"tool_call": {...}} / {"tool_calls": [{...}]} / {"action": {"tool":..,"args":..}}
+    inner = reply.get("tool_call") or reply.get("action") if isinstance(reply.get("tool_call") or reply.get("action"), dict) else None
+    if inner is None and isinstance(reply.get("tool_calls"), list) and reply["tool_calls"]:
+        inner = reply["tool_calls"][0]
+        if isinstance(inner, dict) and isinstance(inner.get("function"), dict):
+            inner = {"tool": inner["function"].get("name"), "args": inner["function"].get("arguments")}
+    src = inner if isinstance(inner, dict) else reply
+    tool = next((src[k] for k in TOOL_KEYS if isinstance(src.get(k), str) and src[k]), None)
+    args = next((src[k] for k in ARG_KEYS if k in src), None)
+    if isinstance(args, str):
+        try:
+            args = json.loads(args)
+        except json.JSONDecodeError:
+            args = {}
+    for k in FINAL_KEYS:
+        if k in reply and reply[k] is not None and not tool:
+            out["final"] = reply[k]
+            return out
+    if tool:
+        out["tool"] = tool
+        out["args"] = args if isinstance(args, dict) else {}
+    return out
+
+
 def _memory_block(mem: dict) -> str:
     out = []
     if mem.get("prompt_patch"):
@@ -120,7 +156,7 @@ class Actor:
             trace.llm_cost_usd += res.cost_usd
             trace.llm_latency_s += res.latency_s
             trace.tokens += res.prompt_tokens + res.completion_tokens
-            reply = parse_json(res.text)
+            reply = normalize_reply(parse_json(res.text))
             thought = str(reply.get("thought", ""))[:400]
             messages.append({"role": "assistant", "content": res.text if len(res.text) < 4000 else json.dumps(reply)})
 
@@ -139,10 +175,10 @@ class Actor:
             args = reply.get("args") or {}
             if not tool:
                 malformed += 1
-                obs = ("Your reply had no 'tool' and no 'final'. Reply with exactly one JSON object of the allowed forms."
-                       if reply.get("parse_error") else "Missing 'tool'. Choose a tool or give 'final'.")
-                trace.steps.append(Step(idx, thought, None, None, obs, False, res.latency_s, res.model, res.cost_usd,
-                                        res.prompt_tokens + res.completion_tokens))
+                obs = ('Malformed reply. Use exactly one of: {"thought": "...", "tool": "server.tool", "args": {...}} '
+                       'or {"thought": "...", "final": <answer>}. Reply now.')
+                trace.steps.append(Step(idx, thought, None, None, f"{obs}\n(raw reply head: {res.text[:300]!r})", False,
+                                        res.latency_s, res.model, res.cost_usd, res.prompt_tokens + res.completion_tokens))
                 messages.append({"role": "user", "content": obs})
                 if malformed >= 2:
                     trace.stop_reason = "malformed_replies"
@@ -169,8 +205,11 @@ class Actor:
             trace.llm_cost_usd += res.cost_usd
             trace.llm_latency_s += res.latency_s
             trace.tokens += res.prompt_tokens + res.completion_tokens
-            reply = parse_json(res.text)
+            reply = normalize_reply(parse_json(res.text))
             if reply.get("final") is not None:
                 trace.final = reply["final"]
+                trace.finished = True
+            elif not reply.get("parse_error"):
+                trace.final = reply  # last resort: whatever JSON it produced is the answer
                 trace.finished = True
         return trace

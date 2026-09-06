@@ -23,10 +23,10 @@
   },
   "crm.get_owner": {
     "description": "Get one owner by id.",
-    "calls": 5,
-    "ok": 5,
+    "calls": 11,
+    "ok": 11,
     "errors": 0,
-    "latency_total": 0.0034,
+    "latency_total": 0.0105,
     "error_signatures": {},
     "conventions": [],
     "probed": false,
@@ -34,13 +34,14 @@
   },
   "crm.list_deals": {
     "description": "List deals. Paginated: pass the returned next_cursor to get the next page. Optional stage filter.",
-    "calls": 13,
-    "ok": 13,
+    "calls": 23,
+    "ok": 23,
     "errors": 0,
-    "latency_total": 0.0188,
+    "latency_total": 0.0425,
     "error_signatures": {},
     "conventions": [
-      "The tool paginates results using 'next_cursor'. To get all items, calls must be made repeatedly, passing the 'next_cursor' value as the 'cursor' argument until 'next_cursor' is null."
+      "The tool paginates results using 'next_cursor'. To get all items, calls must be made repeatedly, passing the 'next_cursor' value as the 'cursor' argument until 'next_cursor' is null.",
+      "The `list_deals` tool requires pagination by passing the `next_cursor` value from the previous response as the `cursor` argument until `next_cursor` is null."
     ],
     "probed": true,
     "shape": "object keys=['items', 'next_cursor', 'total']; items[0] keys=['amount', 'company', 'currency', 'health', 'id', 'owner', 'stage']"
@@ -55,5 +56,85 @@
     "conventions": [],
     "probed": true,
     "shape": "object keys=['owners']"
+  },
+  "tracker.add_label": {
+    "description": "Add a label to an issue. Label must exist (see list_labels).",
+    "calls": 27,
+    "ok": 27,
+    "errors": 0,
+    "latency_total": 0.0199,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "tracker.assign_issue": {
+    "description": "Assign an issue to a member by member_id (m_XX).",
+    "calls": 25,
+    "ok": 25,
+    "errors": 0,
+    "latency_total": 0.0185,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "tracker.get_issue": {
+    "description": "Get one issue.",
+    "calls": 0,
+    "ok": 0,
+    "errors": 0,
+    "latency_total": 0.0,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "tracker.list_comments": {
+    "description": "List comments on an issue.",
+    "calls": 0,
+    "ok": 0,
+    "errors": 0,
+    "latency_total": 0.0,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "tracker.list_issues": {
+    "description": "List issues. Paginated via next_cursor. Optional status filter (open|closed).",
+    "calls": 12,
+    "ok": 12,
+    "errors": 0,
+    "latency_total": 0.0091,
+    "error_signatures": {},
+    "conventions": [
+      "The tool paginates results using a 'cursor' field. The 'next_cursor' field in the response indicates if more items are available and should be passed back as 'cursor' in subsequent calls until 'next_cursor' is null.",
+      "The tool paginates results using a 'cursor' field. The 'next_cursor' field in the response should be passed back as 'cursor' in subsequent calls until 'next_cursor' is null."
+    ],
+    "probed": true,
+    "shape": "object keys=['items', 'next_cursor']; items[0] keys=['assignee', 'id', 'labels', 'reporter', 'status', 'title']"
+  },
+  "tracker.list_labels": {
+    "description": "List available labels with their meaning.",
+    "calls": 6,
+    "ok": 6,
+    "errors": 0,
+    "latency_total": 0.0042,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": true,
+    "shape": "object keys=['labels']"
+  },
+  "tracker.list_members": {
+    "description": "List team members and the components they own.",
+    "calls": 6,
+    "ok": 6,
+    "errors": 0,
+    "latency_total": 0.0031,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": true,
+    "shape": "object keys=['members']"
   }
 }

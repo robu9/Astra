@@ -1,0 +1,16 @@
+{
+ "facts_new": 3,
+ "conventions_new": 0,
+ "skill": {
+  "name": "At-Risk Pipeline Report",
+  "status": "promoted",
+  "version": 3
+ },
+ "prompt_patch": true,
+ "facts_demoted": 2,
+ "cost_usd": 0.0058462,
+ "latency_s": 9.399581000005128,
+ "model": "gemini-2.5-flash",
+ "tokens": 5048,
+ "what_went_wrong": "The agent incorrectly identified 'at risk' deals, missing some with 'Green' health that had risk indicators in notes, and falsely identifying some with 'Amber' health as at-risk."
+}
