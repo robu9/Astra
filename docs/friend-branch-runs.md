@@ -2,6 +2,12 @@
 
 Archive of the four GitHub branches that existed before `main` was reset to empty memory. Live artefacts under `memory/` and `runs/` were wiped after this was written; this file is the record.
 
+**Chart (same as the comparison canvas):** open [`scoreboard/friend-runs.html`](../scoreboard/friend-runs.html) in a browser, or `ao preview scoreboard/friend-runs.html`. Numbers are in [`docs/friend-branch-runs.json`](friend-branch-runs.json). To rebuild the page after editing the JSON:
+
+```bash
+python -m astra.friend_board
+```
+
 Branches at the time:
 
 | Branch | Author | What it was |

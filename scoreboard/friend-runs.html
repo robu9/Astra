@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Astra — friend-branch quality chart</title>
+<style>
+  :root { --bg:#0b0d12; --card:#12161f; --line:#232a38; --fg:#e6e9f0; --mut:#8b94a7; --acc:#7cc4ff; --ok:#5fd68a; --bad:#ff7b7b; --warn:#ffcf6b; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.45 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--fg); }
+  header { padding:20px 28px 8px; }
+  header h1 { margin:0; font-size:20px; letter-spacing:.2px; }
+  header .sub { color:var(--mut); margin-top:4px; max-width:72ch; }
+  main { padding:12px 28px 40px; display:grid; gap:16px; }
+  .kpis { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; }
+  .kpi { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
+  .kpi .v { font-size:22px; font-weight:600; } .kpi .l { color:var(--mut); font-size:12px; margin-top:2px; }
+  .kpi.ok .v { color:var(--ok); } .kpi.warn .v { color:var(--warn); } .kpi.bad .v { color:var(--bad); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  .card h2 { margin:0 0 4px; font-size:13px; font-weight:600; color:var(--mut); text-transform:uppercase; letter-spacing:.6px; }
+  .card .cap { color:var(--mut); font-size:12px; margin-bottom:10px; }
+  svg { width:100%; height:320px; display:block; }
+  .legend { display:flex; flex-wrap:wrap; gap:14px; color:var(--mut); font-size:12px; margin-top:10px; }
+  .legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:-1px; }
+  .note { color:var(--mut); font-size:12px; }
+  a { color:var(--acc); }
+  @media (max-width: 900px) { .kpis { grid-template-columns:1fr 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Astra — friend-branch quality</h1>
+  <p class="sub">Archived 6 Sep 2026, before <code>main</code> was reset. Same chart as the comparison canvas. Data lives in <code>docs/friend-branch-runs.json</code>; regenerate with <code>python -m astra.friend_board</code>.</p>
+</header>
+<main>
+  <section class="kpis" id="kpis"></section>
+  <section class="card">
+    <h2 id="chart-title">Quality by run (same family, sequential)</h2>
+    <p class="cap" id="chart-cap"></p>
+    <svg id="chart" viewBox="0 0 900 320" role="img" aria-labelledby="chart-title"></svg>
+    <div class="legend" id="legend"></div>
+  </section>
+  <p class="note">Open this file in a browser, or <code>ao preview scoreboard/friend-runs.html</code>. Write-up: <a href="../docs/friend-branch-runs.md">docs/friend-branch-runs.md</a>.</p>
+</main>
+<script src="friend-runs-data.js"></script>
+<script>
+const D = window.FRIEND_RUNS;
+if (!D) {
+  document.body.insertAdjacentHTML("afterbegin", "<p style='padding:20px;color:#ff7b7b'>Missing friend-runs-data.js — run <code>python -m astra.friend_board</code>.</p>");
+} else {
+  document.getElementById("chart-title").textContent = D.title;
+  document.getElementById("chart-cap").textContent = D.caption;
+  document.getElementById("kpis").innerHTML = D.kpis.map(k =>
+    `<div class="kpi ${k.tone}"><div class="v">${k.value}</div><div class="l">${k.label}</div></div>`
+  ).join("");
+  document.getElementById("legend").innerHTML = D.series.map(s =>
+    `<span><i style="background:${s.color}"></i>${s.name}</span>`
+  ).join("");
+
+  const svg = document.getElementById("chart");
+  const W = 900, H = 320, P = { l: 48, r: 24, t: 28, b: 36 };
+  const cats = D.categories, n = cats.length, min = 0, max = 1;
+  const x = i => P.l + (n === 1 ? 0 : i * (W - P.l - P.r) / (n - 1));
+  const y = v => H - P.b - ((v - min) / (max - min)) * (H - P.t - P.b);
+  const fmt = v => Number(v).toFixed(v >= 0.995 || v === 0 ? 0 : 2).replace(/0+$/, "").replace(/\.$/, "") || "0";
+
+  let g = "";
+  for (let k = 0; k <= 4; k++) {
+    const val = max - (max - min) * k / 4;
+    const yy = y(val);
+    g += `<line x1="${P.l}" x2="${W - P.r}" y1="${yy}" y2="${yy}" stroke="#232a38"/>`;
+    g += `<text x="8" y="${yy + 4}" font-size="11" fill="#8b94a7">${val.toFixed(1)}</text>`;
+  }
+  g += `<text x="8" y="14" font-size="11" fill="#8b94a7">quality</text>`;
+  cats.forEach((c, i) => {
+    g += `<text x="${x(i)}" y="${H - 10}" font-size="12" fill="#8b94a7" text-anchor="middle">${c}</text>`;
+  });
+
+  for (const s of D.series) {
+    const pts = s.data.map((v, i) => `${x(i)},${y(v)}`).join(" ");
+    const area = `${x(0)},${y(0)} ${pts} ${x(n - 1)},${y(0)}`;
+    g += `<polygon fill="${s.color}" fill-opacity="0.08" points="${area}"/>`;
+    g += `<polyline fill="none" stroke="${s.color}" stroke-width="2.2" points="${pts}"/>`;
+    s.data.forEach((v, i) => {
+      g += `<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="${s.color}"/>`;
+      const dy = v < 0.12 ? 16 : -12;
+      g += `<text x="${x(i)}" y="${y(v) + dy}" font-size="11" fill="${s.color}" text-anchor="middle">${fmt(v)}</text>`;
+    });
+  }
+  svg.innerHTML = g;
+}
+</script>
+</body>
+</html>

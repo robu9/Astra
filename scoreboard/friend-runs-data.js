@@ -1,0 +1,99 @@
+window.FRIEND_RUNS = {
+  "title": "Quality by run (same family, sequential)",
+  "caption": "Y-axis is grader quality (0\u20131). X-axis is run index within that family. Source: runs/results.tsv on each branch, archived 6 Sep 2026 before main was reset.",
+  "categories": [
+    "r01",
+    "r02",
+    "r03",
+    "r04",
+    "r05"
+  ],
+  "series": [
+    {
+      "id": "ao_crm",
+      "name": "ao-check-runs CRM (fresh)",
+      "color": "#5fd68a",
+      "data": [
+        0.0,
+        0.67,
+        1.0,
+        0.932,
+        0.917
+      ]
+    },
+    {
+      "id": "ao_tracker",
+      "name": "ao-check-runs tracker (fresh)",
+      "color": "#ffcf6b",
+      "data": [
+        0.644,
+        0.711,
+        0.644,
+        0.489,
+        0.65
+      ]
+    },
+    {
+      "id": "learn_crm",
+      "name": "learn/crm_at_risk (trained memory)",
+      "color": "#7cc4ff",
+      "data": [
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "learn_tracker",
+      "name": "learn/tracker_triage (trained memory)",
+      "color": "#ff7b7b",
+      "data": [
+        0.889,
+        0.089,
+        0.667,
+        0.756,
+        0.817
+      ]
+    }
+  ],
+  "kpis": [
+    {
+      "value": "4 / 5",
+      "label": "CRM steps improved (ao-check-runs)",
+      "tone": "ok"
+    },
+    {
+      "value": "1 / 4",
+      "label": "Tracker steps improved (ao-check-runs)",
+      "tone": "warn"
+    },
+    {
+      "value": "4 / 5",
+      "label": "CRM retests at 1.00 (crm_at_risk)",
+      "tone": "ok"
+    },
+    {
+      "value": "0 / 5",
+      "label": "Tracker retests kept (tracker_triage)",
+      "tone": "bad"
+    }
+  ],
+  "baseline": {
+    "crm_main": [
+      0.0,
+      0.167,
+      0.625,
+      0.625,
+      0.792
+    ],
+    "tracker_main": [
+      0.044,
+      0.711,
+      0.711,
+      0.711,
+      0.783
+    ]
+  }
+};
