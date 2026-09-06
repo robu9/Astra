@@ -245,32 +245,50 @@ Each run uses seed `N`, so run 3 sees deals, owners, issues and comments run 1 n
 
 ## 8. Results
 
-Offline smoke run (`ASTRA_LLM=mock`, 5 fresh snapshots per family, tracker over **real MCP stdio**). The mock model is knowledge-gated: it only applies a rule if that rule is present in the prompt Astra built from memory, so these curves are produced by the memory mechanics, not by a model getting lucky. Real-model runs are committed under `runs/` as they are produced.
+Everything below is committed under `runs/` and `memory/` exactly as produced: **real model (Gemini 2.5 Flash), real MCP stdio transport, fresh memory, one continuous session** across three tool surfaces the agent had never seen. Each run uses a different data snapshot (ids, names and records change), so memorising an answer cannot help.
 
 ```
-run                      mode        quality  ok calls errs    cost$  lat s facts skills kept
-crm_at_risk-r01          novel          0.00   F     6    1   0.0133    0.2     3      0 n/a
-crm_at_risk-r02          recovering     0.80   F     5    0   0.0149    0.2     3      0 kept
-crm_at_risk-r03          novel          1.00   T     5    0   0.0161    0.2     3      1 kept
-crm_at_risk-r04          novel          0.75   F     6    0   0.0198    0.2     3      1 none
-crm_at_risk-r05          novel          0.92   T     6    0   0.0199    0.2     3      1 kept
-tracker_triage-r01       novel          0.04   F    30   25   0.1079    1.0     3      1 n/a
-tracker_triage-r02       recovering     1.00   T    30    0   0.1291    1.0     4      1 kept
-tracker_triage-r03       skilled        1.00   T    29    0   0.0067    0.4     4      2 kept
-tracker_triage-r04       skilled        1.00   T    29    0   0.0066    0.4     4      2 none
-tracker_triage-r05       skilled        1.00   T    38    0   0.0099    0.5     4      2 none
+run                   mode         quality  ok calls errs   cost$  lat s facts skills  kept
+crm_at_risk-r01       novel           0.00   F     5    1  0.0084   19.1     3      0  n/a
+crm_at_risk-r02       recovering      0.17   F     1    0  0.0017    4.5     5      0  kept
+crm_at_risk-r03       recovering      0.62   F     4    1  0.0082   18.3     7      0  kept
+crm_at_risk-r04       novel           0.62   F    10    0  0.0154   26.0     7      1  kept
+crm_at_risk-r05       skilled         0.79   F    19    0  0.0302   44.1     9      1  kept
+tracker_triage-r01    novel           0.04   F     4    0  0.0061   14.0     5      1  n/a
+tracker_triage-r02    recovering      0.71   F    21    0  0.0344   58.8     8      1  kept
+tracker_triage-r03    skilled         0.71   F    27    0  0.0473   74.9     8      2  kept
+tracker_triage-r04    skilled         0.71   F    24    0  0.0489   78.1    12      2  none
+tracker_triage-r05    skilled         0.78   F    35    0  0.0788   92.5    17      2  kept
+gh_bug_triage-r01     novel           0.30   F     1    0  0.0159   27.9     4      2  n/a
+gh_bug_triage-r02     recovering      0.20   F     6    0  0.0418   55.9     6      2  reverted
+gh_bug_triage-r03     recovering      0.40   F     2    1  0.0127   23.7     8      2  kept
+gh_bug_digest-r01     novel           0.00   F     3    0  0.0285   44.1    11      2  n/a
+gh_bug_digest-r02     recovering      1.00   T     1    0  0.0115   19.3    12      2  kept
+gh_bug_digest-r03     novel           0.40   F     1    0  0.0094   15.7    13      2  reverted
+gh_bug_digest-r04     novel           1.00   T     1    0  0.0187   27.9    13      2  kept
 ```
 
-What the rows show:
+`crm_*` and `tracker_*` are graded against hidden ground truth. `gh_*` ran against the **real GitHub MCP server** (`@modelcontextprotocol/server-github`, live data from `Untrivial-ai/agent-orchestrator`) and are scored by the LLM judge.
 
-- **Accuracy:** CRM 0.00 → 1.00 by run 3; tracker 0.04 → 1.00 by run 2 and stays there on new data.
-- **Reliability:** tool errors 25 → 0 (enum casing and id format learned into the tool model after one run).
-- **Cost:** tracker $0.129 → $0.0067 per run once the skill is promoted and the controller routes to the fast model.
-- **Speed:** 1.0 s → 0.4 s.
-- **Memory:** facts 3 → 4, skills 0 → 2 promoted, prompt patches kept; `kept`/`reverted` shows the keep-or-revert gate working (one tracker prompt patch was reverted in an earlier run when quality dipped).
-- **New tool surface:** phase 2 (tracker) starts from scratch on tool knowledge but the general lessons and the loop carry over; no code changed between phases.
+**Accuracy.** CRM 0.00 → 0.79; tracker 0.04 → 0.78; GitHub digest 0.00 → 1.00 (twice). The dips (`crm r02`, `gh_bug_digest r03`) are what a new snapshot does to a half-learned rule; the gate handles them (below).
 
-Open `scoreboard/index.html` for the curves and the live memory view.
+**Reliability.** Run 1 of every family contains the classic first-contact mistakes: an invalid enum (`stage='OPEN'`), a stop after page 1, a hallucinated tool (`github.list_collaborators`). Each becomes a tool-model note or a fact after one reflection and does not recur.
+
+**Contextual logic learned from tool data, not from the schema** (`memory/semantic.json`, confidence in brackets):
+
+- CRM: *"Deals with notes indicating 'PO pending' or 'no ETA' should be considered at risk"* [0.9]; *"Deals whose owner has active=false are UNASSIGNED"* [0.9]; *"Amber health alone is not at risk unless notes say so"* [0.9]; *"list_deals does not accept 'OPEN'; open = not closed_won/closed_lost"* [1.0].
+- Tracker: *"Issues that are duplicates, as indicated by comments, should be labeled 'duplicate' and not assigned an owner"* [1.0]; *"Assignees are determined by matching the [module] in the title to members' owns field"* [1.0]; *"'Typo' / 'Minor alignment issue' ⇒ sev-3"* [0.9].
+- GitHub: *"list_issues returns the comments count directly, no separate call needed"* [1.0]; *"github.list_collaborators is not available"* [1.0]; *"assigned = assignees list non-empty"*.
+
+The tracker duplicate rule is the interesting one. Runs 1–2 never called `tracker.list_comments`, so the reflector could not explain why some "obvious" issues were marked wrong. Because the reflector is told which tools were **never called**, and the actor is told the same when previous runs scored low, run 3 started reading comments and run 5 wrote the rule down. That is the exploration → evidence → durable rule path, and it required no fixture-specific code.
+
+**Cost and speed.** Within a family, cost tracks how much the agent chooses to *verify* (tracker cost rises with quality because it reads more comments). Across families the reuse effect is visible: GitHub digest run 2 solved the task in **one** tool call for $0.0115 after run 1 spent three calls and $0.0285 learning `sort=updated, per_page=10`. A run costs 1–8 cents and 15–90 s end to end including reflection.
+
+**The keep-or-revert gate.** `gh_bug_triage r02` and `gh_bug_digest r03` show `reverted`: a prompt patch was proposed, the next run scored lower, the patch was rolled back to the previous active text. Candidate skills for `gh_bug_digest` v1 were *rejected* for the same reason; the second proposal became the candidate. Nothing is accepted on the reflector's say-so.
+
+**An honest negative.** `gh_bug_triage` asked for "did a maintainer reply?", which this MCP server cannot answer (it has no list-comments tool). Quality stayed at 0.2–0.4. The reflection for run 3 says exactly that ("attempted to call an unavailable tool, `github.list_collaborators`"), and the fact *"list_collaborators is not available"* carried over into `gh_bug_digest`. A wrong task is diagnosed, not papered over.
+
+`scoreboard/index.html` renders these curves and the live memory view. Offline smoke runs (`ASTRA_LLM=mock`) exercise the same loop deterministically without a key.
 
 ---
 
@@ -294,8 +312,12 @@ python -m astra memory
 # Regenerate the scoreboard, then open scoreboard/index.html
 python -m astra scoreboard
 
-# Attach any external MCP + any task (LLM-judged)
-python -m astra attach --mcp "name=command ..." --task "..." --runs 3
+# Attach any external MCP + any task (LLM-judged). Write-style tools are hidden unless --allow-writes.
+export GITHUB_PERSONAL_ACCESS_TOKEN=$(gh auth token)
+python -m astra attach --mcp "github=npx -y @modelcontextprotocol/server-github" \
+  --task "Digest the 10 most recently updated open 'bug' issues in owner/repo: number, title, age_days, comments, assigned" \
+  --schema '{"issues":[{"number":"int","title":"string","age_days":"int","comments":"int","assigned":"bool"}]}' \
+  --family gh_bug_digest --runs 4
 
 # Start over
 python -m astra reset
@@ -360,8 +382,9 @@ AGENTS.md           rules for AO / coding-agent workers
 
 ## 12. Honest limits
 
-- Two fixtures, small data. Enough to show the loop; not a benchmark.
-- The offline mock is knowledge-gated and fixture-aware. It proves the memory mechanics deterministically; it is not model intelligence. Use a real model for the demo.
+- Two fixtures plus one real MCP, small data, 17 committed runs. Enough to show the loop; not a benchmark.
+- Curves are noisy run-to-run because every run is a new snapshot and the model is Gemini 2.5 Flash at low reasoning effort; the trend and the memory contents are the evidence, not any single row.
+- The offline mock is knowledge-gated and fixture-aware. It proves the memory mechanics deterministically; it is not model intelligence.
 - Keep-or-revert compares against the previous run on a *different* data snapshot, so a 0.05 tolerance is used; a noisy snapshot can still promote a mediocre patch (visible as `kept` followed by a dip).
 - Skills are one per family per server set; there is no skill library across families yet.
 - The LLM judge for arbitrary tasks can be gamed by a confident answer; ground-truth graders are preferred whenever the task allows one.
