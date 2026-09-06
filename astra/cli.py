@@ -68,6 +68,26 @@ def cmd_memory(a):
             print(f"  {q}: {t['ok']}/{t['calls']} ok, {t['latency_total']:.2f}s; {'; '.join(t['conventions'])}")
 
 
+def cmd_scoreboard(a):
+    from astra.scoreboard import build
+    p = build(a.runs, a.memory)
+    print(f"wrote {p}. Open scoreboard/index.html (or `ao preview scoreboard/index.html` inside an AO session).")
+
+
+def cmd_ao_run(a):
+    """Spawn one AO worker per learning run so every iteration is a visible, isolated AO session."""
+    from astra.ao_client import AOClient, worker_prompt
+    ao = AOClient()
+    if not ao.available():
+        raise SystemExit("AO daemon not reachable on 127.0.0.1:%s. Open the AO desktop app (or `ao start`) first."
+                         % __import__("os").environ.get("AO_PORT", "3001"))
+    for fam in a.family:
+        for i in range(a.runs_n):
+            seed = a.seed + i
+            sid = ao.spawn(worker_prompt(fam, seed, a.transport), name=f"astra {fam} r{seed:02d}")
+            print(f"spawned AO worker {sid} for {fam} seed {seed}")
+
+
 def cmd_reset(a):
     for p in (a.memory, a.runs):
         shutil.rmtree(p, ignore_errors=True)
@@ -78,6 +98,11 @@ def _summary(runs_root: str):
     tsv = Path(runs_root) / "results.tsv"
     if not tsv.exists():
         return
+    try:
+        from astra.scoreboard import build
+        build(runs_root, "memory" if runs_root == "runs" else str(Path(runs_root).parent / "astra_mem"))
+    except Exception:
+        pass
     rows = [l.split("\t") for l in tsv.read_text(encoding="utf-8").splitlines() if l.strip()]
     head, body = rows[0], rows[1:]
     ix = {c: i for i, c in enumerate(head)}
@@ -114,6 +139,13 @@ def main(argv=None):
     p.add_argument("--runs", dest="runs_n", type=int, default=3)
     p.add_argument("--seed", type=int, default=1)
     p.set_defaults(fn=cmd_attach)
+    p = sub.add_parser("ao-run", help="spawn AO workers, one per learning run")
+    p.add_argument("family", nargs="+", choices=list(FAMILIES))
+    p.add_argument("--runs", dest="runs_n", type=int, default=1)
+    p.add_argument("--seed", type=int, default=1)
+    p.add_argument("--transport", choices=["inprocess", "mcp"], default="inprocess")
+    p.set_defaults(fn=cmd_ao_run)
+    sub.add_parser("scoreboard").set_defaults(fn=cmd_scoreboard)
     sub.add_parser("memory").set_defaults(fn=cmd_memory)
     sub.add_parser("reset").set_defaults(fn=cmd_reset)
     a = ap.parse_args(argv)

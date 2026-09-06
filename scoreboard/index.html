@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Astra - learning scoreboard</title>
+<style>
+  :root { --bg:#0b0d12; --card:#12161f; --line:#232a38; --fg:#e6e9f0; --mut:#8b94a7; --acc:#7cc4ff; --ok:#5fd68a; --bad:#ff7b7b; --warn:#ffcf6b; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.45 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--fg); }
+  header { padding:20px 28px 8px; display:flex; align-items:baseline; gap:16px; }
+  header h1 { margin:0; font-size:20px; letter-spacing:.2px; }
+  header .sub { color:var(--mut); }
+  main { padding:12px 28px 40px; display:grid; gap:16px; grid-template-columns:repeat(12, 1fr); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  .card h2 { margin:0 0 8px; font-size:13px; font-weight:600; color:var(--mut); text-transform:uppercase; letter-spacing:.6px; }
+  .kpis { grid-column:span 12; display:grid; grid-template-columns:repeat(6, 1fr); gap:12px; }
+  .kpi { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
+  .kpi .l { color:var(--mut); font-size:12px; } .kpi .v { font-size:22px; font-weight:600; margin-top:2px; } .kpi .d { font-size:12px; margin-top:2px; }
+  .up { color:var(--ok); } .down { color:var(--bad); } .flat { color:var(--mut); }
+  .chart { grid-column:span 6; } .chart svg { width:100%; height:200px; display:block; }
+  .wide { grid-column:span 12; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  th { color:var(--mut); font-weight:500; }
+  td.num { font-variant-numeric:tabular-nums; text-align:right; } th.num { text-align:right; }
+  .pill { display:inline-block; padding:1px 8px; border-radius:999px; font-size:11px; border:1px solid var(--line); color:var(--mut); }
+  .pill.novel { color:var(--warn); } .pill.skilled { color:var(--ok); } .pill.recovering { color:var(--bad); }
+  .mem { grid-column:span 6; max-height:360px; overflow:auto; }
+  .mem li { margin:4px 0; } .mem small { color:var(--mut); }
+  .legend { display:flex; gap:14px; color:var(--mut); font-size:12px; margin-top:6px; } .legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:-1px; }
+  select { background:var(--bg); color:var(--fg); border:1px solid var(--line); border-radius:6px; padding:4px 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Astra</h1>
+  <span class="sub">self-improving tool agent - one line per run, fresh data each run</span>
+  <span style="flex:1"></span>
+  <label class="sub">family <select id="fam"></select></label>
+</header>
+<main>
+  <section class="kpis" id="kpis"></section>
+  <section class="card chart"><h2>Quality (grader score, 0-1)</h2><svg id="c_quality"></svg></section>
+  <section class="card chart"><h2>Cost per run (USD, actor + reflection)</h2><svg id="c_cost"></svg></section>
+  <section class="card chart"><h2>Tool calls and errors</h2><svg id="c_calls"></svg><div class="legend"><span><i style="background:var(--acc)"></i>calls</span><span><i style="background:var(--bad)"></i>errors</span></div></section>
+  <section class="card chart"><h2>Latency (s) and memory size</h2><svg id="c_lat"></svg><div class="legend"><span><i style="background:var(--acc)"></i>latency</span><span><i style="background:var(--ok)"></i>facts + skills + tools known</span></div></section>
+  <section class="card wide"><h2>Runs</h2><div style="overflow:auto"><table id="runs"></table></div></section>
+  <section class="card mem"><h2>Semantic memory - facts learned from tool data</h2><ul id="facts"></ul></section>
+  <section class="card mem"><h2>Procedural memory - skills</h2><ul id="skills"></ul><h2 style="margin-top:14px">Tool model</h2><ul id="tools"></ul></section>
+</main>
+<script src="data.js"></script>
+<script>
+const D = window.ASTRA_DATA || {runs:[], memory:{facts:[],skills:[],tool_model:{}}};
+const fams = [...new Set(D.runs.map(r=>r.family))];
+const sel = document.getElementById('fam');
+sel.innerHTML = ['<option value="*">all</option>', ...fams.map(f=>`<option>${f}</option>`)].join('');
+sel.onchange = render;
+const fmt = (n,d=2)=> (n==null||isNaN(n))?'-':Number(n).toFixed(d);
+function delta(a,b,invert=false,fmtf=fmt){ if(a==null||b==null) return '<span class="flat">-</span>'; const d=b-a; const good = invert? d<0 : d>0; const cls = d===0?'flat':(good?'up':'down'); const sign=d>0?'+':''; return `<span class="${cls}">${sign}${fmtf(d)} vs run 1</span>`; }
+function line(svgId, series, opts={}) {
+  const svg = document.getElementById(svgId); const W=600, H=200, P={l:36,r:10,t:10,b:22};
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.innerHTML='';
+  const n = Math.max(...series.map(s=>s.v.length)); if(!n) { svg.innerHTML='<text x="20" y="100" fill="#8b94a7">no runs yet</text>'; return; }
+  const all = series.flatMap(s=>s.v).filter(x=>x!=null); let max = opts.max ?? Math.max(...all, 0.0001); let min = opts.min ?? 0;
+  const x = i => P.l + (n===1?0:(i*(W-P.l-P.r)/(n-1))); const y = v => H-P.b - ((v-min)/(max-min||1))*(H-P.t-P.b);
+  let g = ''; for (let k=0;k<=4;k++){ const yy=P.t+(H-P.t-P.b)*k/4; const val=max-(max-min)*k/4; g+=`<line x1="${P.l}" x2="${W-P.r}" y1="${yy}" y2="${yy}" stroke="#232a38"/><text x="4" y="${yy+4}" font-size="10" fill="#8b94a7">${fmt(val, max>10?0:2)}</text>`; }
+  for (let i=0;i<n;i++) g+=`<text x="${x(i)}" y="${H-6}" font-size="10" fill="#8b94a7" text-anchor="middle">r${i+1}</text>`;
+  for (const s of series){ const pts = s.v.map((v,i)=>v==null?null:`${x(i)},${y(v)}`).filter(Boolean).join(' '); g+=`<polyline fill="none" stroke="${s.c}" stroke-width="2" points="${pts}"/>`; s.v.forEach((v,i)=>{ if(v!=null) g+=`<circle cx="${x(i)}" cy="${y(v)}" r="3" fill="${s.c}"/>`; }); }
+  svg.innerHTML = g;
+}
+function render(){
+  const f = sel.value; const rows = D.runs.filter(r=> f==='*' || r.family===f);
+  const first = rows[0], last = rows[rows.length-1];
+  const k = document.getElementById('kpis');
+  const memSize = r => (r.facts||0)+(r.skills_promoted||0)+(r.tools_known||0);
+  k.innerHTML = !rows.length ? '' : [
+    ['Quality', fmt(last.quality), delta(first.quality,last.quality)],
+    ['Success', last.success?'yes':'no', `<span class="flat">${rows.filter(r=>r.success).length}/${rows.length} runs</span>`],
+    ['Cost / run', '$'+fmt(last.cost_usd+last.reflect_cost_usd,4), delta(first.cost_usd+first.reflect_cost_usd,last.cost_usd+last.reflect_cost_usd,true,n=>'$'+fmt(n,4))],
+    ['Latency', fmt(last.latency_s,1)+'s', delta(first.latency_s,last.latency_s,true,n=>fmt(n,1)+'s')],
+    ['Tool errors', last.tool_errors, delta(first.tool_errors,last.tool_errors,true,n=>fmt(n,0))],
+    ['Memory items', memSize(last), delta(memSize(first),memSize(last),false,n=>fmt(n,0))],
+  ].map(([l,v,d])=>`<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${d}</div></div>`).join('');
+  line('c_quality',[{v:rows.map(r=>r.quality),c:'#7cc4ff'}],{max:1});
+  line('c_cost',[{v:rows.map(r=>r.cost_usd+r.reflect_cost_usd),c:'#ffcf6b'}]);
+  line('c_calls',[{v:rows.map(r=>r.tool_calls),c:'#7cc4ff'},{v:rows.map(r=>r.tool_errors),c:'#ff7b7b'}]);
+  line('c_lat',[{v:rows.map(r=>r.latency_s),c:'#7cc4ff'},{v:rows.map(memSize),c:'#5fd68a'}]);
+  document.getElementById('runs').innerHTML = `<tr><th>run</th><th>servers</th><th>mode</th><th>model</th><th class="num">quality</th><th>ok</th><th class="num">calls</th><th class="num">errs</th><th class="num">cached</th><th class="num">tokens</th><th class="num">cost $</th><th class="num">lat s</th><th class="num">facts</th><th class="num">skills</th><th>kept</th><th>what went wrong</th></tr>`
+    + rows.map(r=>`<tr><td>${r.run_id}</td><td>${r.servers}</td><td><span class="pill ${r.mode}">${r.mode}</span></td><td>${r.model}</td><td class="num">${fmt(r.quality)}</td><td>${r.success?'<span class="up">yes</span>':'<span class="down">no</span>'}</td><td class="num">${r.tool_calls}</td><td class="num">${r.tool_errors}</td><td class="num">${r.cached_calls}</td><td class="num">${r.llm_tokens}</td><td class="num">${fmt(r.cost_usd+r.reflect_cost_usd,4)}</td><td class="num">${fmt(r.latency_s,1)}</td><td class="num">${r.facts}</td><td class="num">${r.skills_promoted}${r.skills_candidate?'+'+r.skills_candidate+'c':''}</td><td>${r.kept}</td><td style="white-space:normal;color:var(--mut)">${r.what_went_wrong||''}</td></tr>`).join('');
+  const M = D.memory;
+  document.getElementById('facts').innerHTML = (M.facts||[]).map(x=>`<li>${x.fact} <small>[${x.server||'general'} - conf ${fmt(x.confidence,1)} - seen ${x.seen}x - from ${x.source_tool||'?'}]</small></li>`).join('') || '<li><small>none yet</small></li>';
+  document.getElementById('skills').innerHTML = (M.skills||[]).map(s=>`<li><b>${s.name}</b> v${s.version} <span class="pill ${s.status==='promoted'?'skilled':s.status==='rejected'?'recovering':'novel'}">${s.status}</span> <small>wins ${s.wins}/${s.uses}</small><ol>${s.steps.map(t=>`<li>${t}</li>`).join('')}</ol></li>`).join('') || '<li><small>none yet</small></li>';
+  document.getElementById('tools').innerHTML = Object.entries(M.tool_model||{}).map(([q,t])=>`<li><code>${q}</code> <small>${t.ok}/${t.calls} ok, ${fmt(t.latency_total,2)}s total</small>${t.conventions.length?`<br><small>${t.conventions.join(' | ')}</small>`:''}</li>`).join('');
+}
+render();
+</script>
+</body>
+</html>
