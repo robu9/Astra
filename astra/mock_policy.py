@@ -182,7 +182,7 @@ def _tracker(memory: str, obs: list[tuple[str, str]]) -> str:
     for i in open_issues:
         dup = knows_dup and any("duplicate of #" in c["text"].lower() for c in comments.get(i["id"], []))
         want_label = "duplicate" if dup else sev(i["title"])
-        if ("tracker.add_label", i["id"], want_label) not in writes and want_label not in i["labels"]:
+        if ("tracker.add_label", i["id"], want_label) not in writes and want_label not in i.get("labels", []):
             return json.dumps({"thought": f"label {i['id']}", "tool": "tracker.add_label",
                                "args": {"issue_id": i["id"], "label": want_label}})
         if not dup:
