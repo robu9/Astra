@@ -18,6 +18,10 @@ from pathlib import Path
 from astra.engine import Engine
 from astra.tasks import FAMILIES
 
+# Tool-name prefixes hidden from the agent unless --allow-writes is given (external MCPs are live systems).
+WRITE_PREFIXES = ("create", "update", "delete", "remove", "push", "merge", "add_", "post", "send", "write", "set_",
+                  "fork", "close", "assign", "edit", "put", "patch", "upload", "move", "archive", "trash", "label")
+
 
 def cmd_run(a):
     eng = Engine(a.memory, a.runs)
@@ -41,13 +45,14 @@ def cmd_attach(a):
     eng = Engine(a.memory, a.runs)
     family = a.family[0] if a.family else "user_task"
     schema = json.loads(a.schema) if a.schema else {"result": "string or object"}
+    deny = () if a.allow_writes else WRITE_PREFIXES
     for i in range(a.runs_n):
         servers = []
         for spec in a.mcp:
             name, _, cmd = spec.partition("=")
-            servers.append(MCPStdioServer(name.strip(), shlex.split(cmd)))
+            servers.append(MCPStdioServer(name.strip(), shlex.split(cmd), timeout=180))
         eng.run_once(family, a.task, schema, servers, seed=a.seed + i, grader=None,
-                     run_id=f"{family}-r{a.seed + i:02d}")
+                     run_id=f"{family}-r{a.seed + i:02d}", deny=deny)
     _summary(a.runs)
 
 
@@ -138,6 +143,7 @@ def main(argv=None):
     p.add_argument("--schema", help="JSON answer schema")
     p.add_argument("--runs", dest="runs_n", type=int, default=3)
     p.add_argument("--seed", type=int, default=1)
+    p.add_argument("--allow-writes", action="store_true", help="expose create/update/delete-style tools (default: hidden)")
     p.set_defaults(fn=cmd_attach)
     p = sub.add_parser("ao-run", help="spawn AO workers, one per learning run")
     p.add_argument("family", nargs="+", choices=list(FAMILIES))

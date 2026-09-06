@@ -66,10 +66,13 @@ class ToolGateway:
         self.records: list[CallRecord] = []
 
     # --- attach / discover --------------------------------------------------
-    def attach(self, server: ToolServer, probe: bool = True) -> list[str]:
+    def attach(self, server: ToolServer, probe: bool = True, deny: tuple[str, ...] = ()) -> list[str]:
+        """Attach a server. `deny` holds tool-name prefixes to hide (e.g. write tools on a read-only task)."""
         self.servers[server.name] = server
         names = []
         for spec in server.list_tools():
+            if any(spec.name.lower().startswith(d) for d in deny):
+                continue
             q = f"{server.name}.{spec.name}"
             self.specs[q] = spec
             names.append(q)

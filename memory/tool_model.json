@@ -12,10 +12,10 @@
   },
   "crm.get_notes": {
     "description": "Get notes for a deal. Notes are free text written by sales reps.",
-    "calls": 9,
-    "ok": 9,
+    "calls": 2,
+    "ok": 2,
     "errors": 0,
-    "latency_total": 0.0052,
+    "latency_total": 0.0014,
     "error_signatures": {},
     "conventions": [],
     "probed": false,
@@ -23,10 +23,10 @@
   },
   "crm.get_owner": {
     "description": "Get one owner by id.",
-    "calls": 11,
-    "ok": 11,
+    "calls": 4,
+    "ok": 4,
     "errors": 0,
-    "latency_total": 0.0067,
+    "latency_total": 0.0028,
     "error_signatures": {},
     "conventions": [],
     "probed": false,
@@ -34,17 +34,13 @@
   },
   "crm.list_deals": {
     "description": "List deals. Paginated: pass the returned next_cursor to get the next page. Optional stage filter.",
-    "calls": 16,
+    "calls": 13,
     "ok": 13,
-    "errors": 3,
-    "latency_total": 0.0092,
-    "error_signatures": {
-      "invalid stage '*'": 3
-    },
+    "errors": 0,
+    "latency_total": 0.0188,
+    "error_signatures": {},
     "conventions": [
-      "The 'stage' argument does not accept 'OPEN'. Common open stages include 'qualified', 'prospecting', 'negotiation', etc. A full list should be discovered if needed.",
-      "The 'stage' argument only accepts specific, known valid stage names like 'qualified' and 'negotiation'. Other common stage names like 'prospecting' are invalid.",
-      "The stage 'closing' is not a valid argument for crm.list_deals."
+      "The tool paginates results using 'next_cursor'. To get all items, calls must be made repeatedly, passing the 'next_cursor' value as the 'cursor' argument until 'next_cursor' is null."
     ],
     "probed": true,
     "shape": "object keys=['items', 'next_cursor', 'total']; items[0] keys=['amount', 'company', 'currency', 'health', 'id', 'owner', 'stage']"
@@ -54,7 +50,7 @@
     "calls": 1,
     "ok": 1,
     "errors": 0,
-    "latency_total": 0.002,
+    "latency_total": 0.0008,
     "error_signatures": {},
     "conventions": [],
     "probed": true,

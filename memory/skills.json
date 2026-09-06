@@ -1,1 +1,29 @@
-[]
+[
+  {
+    "name": "At-Risk Pipeline Report",
+    "when": "Produce a report of at-risk deals with owner and reason.",
+    "steps": [
+      "Call `crm.list_deals` and paginate through all results to get a complete list of deals.",
+      "For each deal, check if its 'stage' is not 'closed_lost' or 'closed_won' to determine if it is 'OPEN'.",
+      "For each OPEN deal, check if its 'health' field is 'A' or 'R'. If so, mark it as at-risk with the reason 'Amber health' or 'Red health'.",
+      "For any OPEN deal not marked at-risk by its 'health' field, call `crm.get_notes` for that deal to look for other indicators of 'at risk' status. If notes indicate risk, mark it as at-risk with a relevant reason.",
+      "For each identified at-risk deal, call `crm.get_owner` using the 'owner' ID.",
+      "If the owner's 'active' field is false, or if the owner ID is missing/invalid, set the owner name to 'UNASSIGNED'. Otherwise, use the owner's 'name'.",
+      "Compile the report with deal_id, owner, and reason for all at-risk deals."
+    ],
+    "tools": [
+      "crm.list_deals",
+      "crm.get_notes",
+      "crm.get_owner"
+    ],
+    "servers": [
+      "crm"
+    ],
+    "family": "crm_at_risk",
+    "status": "candidate",
+    "proposed_run": "crm_at_risk-r02",
+    "version": 1,
+    "wins": 0,
+    "uses": 0
+  }
+]

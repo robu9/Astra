@@ -60,11 +60,11 @@ class Engine:
 
     # --- one run ------------------------------------------------------------------------------------------------
     def run_once(self, family_name: str, task: str, answer_schema: dict, servers: list[ToolServer], seed: int,
-                 grader=None, run_id: str | None = None) -> RunResult:
+                 grader=None, run_id: str | None = None, deny: tuple[str, ...] = ()) -> RunResult:
         run_id = run_id or f"{family_name}-{int(time.time())}-{seed}"
         names = []
         for s in servers:
-            names += self.gateway.attach(s)
+            names += self.gateway.attach(s, deny=deny)
         server_names = self.gateway.attached()
         budget = self.controller.plan_run(task, family_name, server_names, names)
         self.log(f"\n== {run_id}  mode={budget.mode} model={budget.model}  ({budget.reason})")

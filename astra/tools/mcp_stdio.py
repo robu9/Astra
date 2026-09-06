@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import threading
 from typing import Any
@@ -25,6 +26,8 @@ class MCPStdioServer(ToolServer):
         self.timeout = timeout
         merged = dict(os.environ)
         merged.update(env or {})
+        resolved = shutil.which(command[0]) or command[0]  # Windows: npx -> npx.cmd, node -> node.exe
+        command = [resolved] + list(command[1:])
         self.proc = subprocess.Popen(
             command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             env=merged, cwd=cwd, text=True, encoding="utf-8", bufsize=1,
