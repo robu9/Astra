@@ -1,0 +1,63 @@
+{
+  "crm.get_deal": {
+    "description": "Get one deal by id.",
+    "calls": 0,
+    "ok": 0,
+    "errors": 0,
+    "latency_total": 0.0,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "crm.get_notes": {
+    "description": "Get notes for a deal. Notes are free text written by sales reps.",
+    "calls": 9,
+    "ok": 9,
+    "errors": 0,
+    "latency_total": 0.0052,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "crm.get_owner": {
+    "description": "Get one owner by id.",
+    "calls": 11,
+    "ok": 11,
+    "errors": 0,
+    "latency_total": 0.0067,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "crm.list_deals": {
+    "description": "List deals. Paginated: pass the returned next_cursor to get the next page. Optional stage filter.",
+    "calls": 16,
+    "ok": 13,
+    "errors": 3,
+    "latency_total": 0.0092,
+    "error_signatures": {
+      "invalid stage '*'": 3
+    },
+    "conventions": [
+      "The 'stage' argument does not accept 'OPEN'. Common open stages include 'qualified', 'prospecting', 'negotiation', etc. A full list should be discovered if needed.",
+      "The 'stage' argument only accepts specific, known valid stage names like 'qualified' and 'negotiation'. Other common stage names like 'prospecting' are invalid.",
+      "The stage 'closing' is not a valid argument for crm.list_deals."
+    ],
+    "probed": true,
+    "shape": "object keys=['items', 'next_cursor', 'total']; items[0] keys=['amount', 'company', 'currency', 'health', 'id', 'owner', 'stage']"
+  },
+  "crm.list_owners": {
+    "description": "List deal owners (sales reps).",
+    "calls": 1,
+    "ok": 1,
+    "errors": 0,
+    "latency_total": 0.002,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": true,
+    "shape": "object keys=['owners']"
+  }
+}

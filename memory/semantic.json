@@ -1,0 +1,220 @@
+[
+  {
+    "fact": "The CRM system does not use 'OPEN' as a valid stage name; 'qualified' is one of the stages representing an open deal.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "ERROR: invalid stage 'OPEN' followed by successful call with stage 'qualified'",
+    "confidence": 0.8,
+    "first_run": "crm_at_risk-r01",
+    "last_seen_run": "crm_at_risk-r01",
+    "seen": 1,
+    "tags": [
+      "crm",
+      "deal",
+      "does",
+      "name",
+      "not",
+      "one",
+      "open",
+      "qualified"
+    ]
+  },
+  {
+    "fact": "Deals with an owner whose 'active' status is false should be considered 'UNASSIGNED' for reporting purposes.",
+    "server": "crm",
+    "source_tool": "crm.get_owner",
+    "evidence": "owner correct on 0/1; owner u_01 (Priya Rao) has active: false",
+    "confidence": 0.9,
+    "first_run": "crm_at_risk-r01",
+    "last_seen_run": "crm_at_risk-r01",
+    "seen": 1,
+    "tags": [
+      "active",
+      "considered",
+      "deals",
+      "false",
+      "owner",
+      "purposes",
+      "reporting",
+      "should"
+    ]
+  },
+  {
+    "fact": "The crm.list_deals tool does not accept 'prospecting' as a valid stage name.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "ERROR: invalid stage 'prospecting'",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r02",
+    "last_seen_run": "crm_at_risk-r02",
+    "seen": 1,
+    "tags": [
+      "accept",
+      "crm",
+      "does",
+      "list_deals",
+      "name",
+      "not",
+      "prospecting",
+      "stage"
+    ]
+  },
+  {
+    "fact": "Deals with notes indicating 'PO pending' or 'no ETA' should be considered 'at risk'.",
+    "server": "crm",
+    "source_tool": "crm.get_notes",
+    "evidence": "PO pending with finance, no ETA",
+    "confidence": 0.9,
+    "first_run": "crm_at_risk-r02",
+    "last_seen_run": "crm_at_risk-r02",
+    "seen": 1,
+    "tags": [
+      "considered",
+      "deals",
+      "eta",
+      "indicating",
+      "notes",
+      "pending",
+      "risk",
+      "should"
+    ]
+  },
+  {
+    "fact": "The 'health' status 'G' (Green) does not indicate an 'at risk' deal, even if notes are not explicitly negative.",
+    "server": "crm",
+    "source_tool": "crm.get_deal",
+    "evidence": "health: G for d_0205, which was a false positive",
+    "confidence": 0.3,
+    "first_run": "crm_at_risk-r02",
+    "last_seen_run": "crm_at_risk-r02",
+    "seen": 1,
+    "tags": [
+      "deal",
+      "does",
+      "even",
+      "explicitly",
+      "green",
+      "health",
+      "indicate",
+      "negative"
+    ]
+  },
+  {
+    "fact": "The 'OPEN' deals include stages beyond 'qualified' and 'negotiation'. Other valid stages representing open deals exist and should be queried.",
+    "server": null,
+    "source_tool": "crm.list_deals",
+    "evidence": "missed deal ids: ['d_0302', 'd_0309']",
+    "confidence": 0.9,
+    "first_run": "crm_at_risk-r03",
+    "last_seen_run": "crm_at_risk-r03",
+    "seen": 1,
+    "tags": [
+      "beyond",
+      "deals",
+      "exist",
+      "include",
+      "negotiation",
+      "open",
+      "other",
+      "qualified"
+    ]
+  },
+  {
+    "fact": "To fully assess if a deal is 'at risk', crm.get_notes must be called for each relevant deal to check for keywords like 'stalled', 'risk', 'delay', 'budget freeze', 'PO pending', 'no ETA'.",
+    "server": null,
+    "source_tool": "crm.get_notes",
+    "evidence": "missed deal ids: ['d_0302', 'd_0309'] (inspect them: why are they at risk?)",
+    "confidence": 0.9,
+    "first_run": "crm_at_risk-r03",
+    "last_seen_run": "crm_at_risk-r03",
+    "seen": 1,
+    "tags": [
+      "assess",
+      "budget",
+      "called",
+      "check",
+      "crm",
+      "deal",
+      "delay",
+      "eta"
+    ]
+  },
+  {
+    "fact": "Deals with 'health' status 'G' (Green) can still be 'at risk' if their notes contain relevant keywords.",
+    "server": null,
+    "source_tool": "crm.get_notes",
+    "evidence": "Grader feedback indicates d_0404, d_0408, d_0411 were missed, all had 'G' health.",
+    "confidence": 0.6,
+    "first_run": "crm_at_risk-r04",
+    "last_seen_run": "crm_at_risk-r04",
+    "seen": 1,
+    "tags": [
+      "can",
+      "contain",
+      "deals",
+      "green",
+      "health",
+      "keywords",
+      "notes",
+      "relevant"
+    ]
+  },
+  {
+    "fact": "A deal with 'health' status 'A' (Amber) is not necessarily 'at risk' unless there are explicit negative notes or other strong indicators.",
+    "server": null,
+    "source_tool": "crm.list_deals",
+    "evidence": "Grader feedback: not actually at risk: ['d_0512', 'd_0516'] (both had health 'A')",
+    "confidence": 0.9,
+    "first_run": "crm_at_risk-r05",
+    "last_seen_run": "crm_at_risk-r05",
+    "seen": 1,
+    "tags": [
+      "amber",
+      "deal",
+      "explicit",
+      "health",
+      "indicators",
+      "necessarily",
+      "negative",
+      "not"
+    ]
+  },
+  {
+    "fact": "The 'health' status 'G' (Green) does not preclude a deal from being 'at risk' if its notes contain relevant keywords, but the absence of such keywords means it is not at risk.",
+    "server": null,
+    "source_tool": "crm.get_notes",
+    "evidence": "Deal d_0513 had 'G' health and no risk notes, but was missed by the agent, implying it should not have been considered at risk based on current signals. Deal d_0504 had 'G' health but was correctly identified as at-risk due to notes.",
+    "confidence": 0.8,
+    "first_run": "crm_at_risk-r05",
+    "last_seen_run": "crm_at_risk-r05",
+    "seen": 1,
+    "tags": [
+      "absence",
+      "being",
+      "but",
+      "contain",
+      "deal",
+      "does",
+      "green",
+      "health"
+    ]
+  },
+  {
+    "fact": "The owner 'u_01' is associated with the name 'Liam Byrne'.",
+    "server": "crm",
+    "source_tool": "crm.get_owner",
+    "evidence": "Trace shows crm.get_owner was called for u_08 (Liam Byrne) but not u_01, leading to u_01 being reported as an ID.",
+    "confidence": 0.9,
+    "first_run": "crm_at_risk-r05",
+    "last_seen_run": "crm_at_risk-r05",
+    "seen": 1,
+    "tags": [
+      "associated",
+      "byrne",
+      "liam",
+      "name",
+      "owner",
+      "u_01"
+    ]
+  }
+]

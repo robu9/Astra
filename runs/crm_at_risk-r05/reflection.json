@@ -1,0 +1,12 @@
+{
+ "facts_new": 3,
+ "conventions_new": 0,
+ "skill": null,
+ "prompt_patch": true,
+ "facts_demoted": 2,
+ "cost_usd": 0.004588399999999999,
+ "latency_s": 8.860953700001119,
+ "model": "gemini-2.5-flash",
+ "tokens": 4258,
+ "what_went_wrong": "The agent incorrectly identified two deals as at-risk and missed one at-risk deal, indicating a misunderstanding of the 'at risk' criteria, especially for deals with 'Amber' health status and some 'Green' health deals."
+}

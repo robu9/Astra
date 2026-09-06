@@ -1,0 +1,36 @@
+{
+  "crm_at_risk@crm": {
+    "active": "When determining 'at risk', prioritize 'health' status 'R' (Red). For deals with 'health' status 'A' (Amber) or 'G' (Green), *always* call crm.get_notes to check for keywords like 'stalled', 'risk', 'delay', 'budget freeze', 'PO pending', 'no ETA'. Only mark a deal at-risk based on notes if crm.get_notes was explicitly called for that deal and returned relevant text. Do not infer notes. If a deal has 'Amber' health but no explicit risk in notes, it is NOT at risk. Ensure all owner IDs are resolved to names using crm.get_owner, and check their 'active' status, before including them in the final report.",
+    "candidate": {
+      "text": "When determining 'at risk', prioritize 'health' status 'R' (Red). For deals with 'health' status 'A' (Amber) or 'G' (Green), *always* call crm.get_notes to check for keywords like 'stalled', 'risk', 'delay', 'budget freeze', 'PO pending', 'no ETA'. Only mark a deal at-risk based on notes if crm.get_notes was explicitly called for that deal and returned relevant text. Do not infer notes. If a deal has 'Amber' health but no explicit risk in notes, it is NOT at risk. Ensure all owner IDs are resolved to names using crm.get_owner, and check their 'active' status, before including them in the final report.",
+      "run": "crm_at_risk-r05"
+    },
+    "history": [
+      {
+        "text": "When identifying 'OPEN' deals, iterate through known open stages like 'qualified', 'prospecting', 'negotiation'.\nFor owner names, if crm.get_owner returns 'active': false, report the owner as 'UNASSIGNED'.\nTo determine 'at risk', consider deals with 'health' status 'A' or 'R', and also check notes for keywords like 'stalled', 'risk', 'delay'.",
+        "run": "crm_at_risk-r01",
+        "kept": true,
+        "resolved_run": "crm_at_risk-r02"
+      },
+      {
+        "text": "To identify 'OPEN' deals, query crm.list_deals for all known valid open stages (e.g., 'qualified', 'negotiation', and any others discovered). Do not assume a stage is valid if it has not been confirmed.\nWhen determining 'at risk', prioritize 'health' status 'R' or 'A'. For notes, look for keywords like 'stalled', 'risk', 'delay', 'budget freeze', 'PO pending', 'no ETA'. Only mark a deal at-risk based on notes if crm.get_notes was explicitly called for that deal and returned relevant text. Do not infer notes.\nIf a deal's 'health' is 'G' (Green), it is generally not 'at risk' unless there is strong, explicit evidence from notes.",
+        "run": "crm_at_risk-r02",
+        "kept": true,
+        "resolved_run": "crm_at_risk-r03"
+      },
+      {
+        "text": "To identify 'OPEN' deals, query crm.list_deals for all known valid open stages (e.g., 'qualified', 'negotiation', 'prospecting', 'proposal', 'closing', and any others discovered). Do not assume a stage is valid if it has not been confirmed, but try a broader set if initial queries miss deals.\nWhen determining 'at risk', prioritize 'health' status 'R' or 'A'. For notes, *always* call crm.get_notes for each deal to look for keywords like 'stalled', 'risk', 'delay', 'budget freeze', 'PO pending', 'no ETA'. Only mark a deal at-risk based on notes if crm.get_notes was explicitly called for that deal and returned relevant text. Do not infer notes.\nIf a deal's 'health' is 'G' (Green), it is generally not 'at risk' unless there is strong, explicit evidence from notes obtained via crm.get_notes.",
+        "run": "crm_at_risk-r03",
+        "kept": true,
+        "resolved_run": "crm_at_risk-r04"
+      },
+      {
+        "text": "To identify 'OPEN' deals, query crm.list_deals for all known valid open stages (e.g., 'qualified', 'negotiation', 'proposal', and any others discovered). Do not assume a stage is valid if it has not been confirmed, but try a broader set if initial queries miss deals.\nWhen determining 'at risk', prioritize 'health' status 'R' or 'A'. For all other deals, *always* call crm.get_notes to check for keywords like 'stalled', 'risk', 'delay', 'budget freeze', 'PO pending', 'no ETA'. Only mark a deal at-risk based on notes if crm.get_notes was explicitly called for that deal and returned relevant text. Do not infer notes.\nIf a deal's 'health' is 'G' (Green), it can still be 'at risk' if its notes contain explicit evidence of risk; therefore, always check notes for 'G' health deals as well.",
+        "run": "crm_at_risk-r04",
+        "kept": true,
+        "resolved_run": "crm_at_risk-r05"
+      }
+    ],
+    "active_before_candidate": "To identify 'OPEN' deals, query crm.list_deals for all known valid open stages (e.g., 'qualified', 'negotiation', 'proposal', and any others discovered). Do not assume a stage is valid if it has not been confirmed, but try a broader set if initial queries miss deals.\nWhen determining 'at risk', prioritize 'health' status 'R' or 'A'. For all other deals, *always* call crm.get_notes to check for keywords like 'stalled', 'risk', 'delay', 'budget freeze', 'PO pending', 'no ETA'. Only mark a deal at-risk based on notes if crm.get_notes was explicitly called for that deal and returned relevant text. Do not infer notes.\nIf a deal's 'health' is 'G' (Green), it can still be 'at risk' if its notes contain explicit evidence of risk; therefore, always check notes for 'G' health deals as well."
+  }
+}

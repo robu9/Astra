@@ -1,0 +1,12 @@
+{
+ "facts_new": 2,
+ "conventions_new": 1,
+ "skill": null,
+ "prompt_patch": true,
+ "facts_demoted": 0,
+ "cost_usd": 0.0034734,
+ "latency_s": 7.329751000012038,
+ "model": "gemini-2.5-flash",
+ "tokens": 2382,
+ "what_went_wrong": "The agent failed to identify all 'OPEN' stages and did not correctly interpret the 'at risk' criteria or handle inactive owners."
+}

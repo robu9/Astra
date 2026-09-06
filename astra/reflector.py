@@ -36,7 +36,14 @@ Return ONE JSON object:
 Rules
 - Facts must be about the third-party data or its business rules (e.g. which field encodes what, how statuses map,
   which records are exceptions), NOT about this specific run's answer. Never store the grader's expected answer verbatim.
-- Only propose a skill if the run's approach was mostly right; otherwise return null and explain in prompt_patch.
+  Never store facts about one specific record (a single id, one person's name); store the rule that produced it.
+- "server" must be the server name whenever the fact is about that tool's data. Use null ONLY for lessons that would
+  hold for any tool anywhere (e.g. "read every page before concluding").
+- tool_conventions: always look for pagination (next_cursor / next_page / has_more fields and how to pass them back),
+  enum values that were rejected vs accepted, id-vs-name arguments, and hidden required fields. Record each one.
+- skill: ALWAYS propose the current best procedure when quality >= 0.5, even if imperfect. It is versioned; the next
+  reflection refines it. Steps must be concrete tool calls in order, including "follow next_cursor until null" when the
+  tool paginates. Return null only when the run was mostly wrong.
 - Be concrete. Mention exact tool names, arg names and values.
 """
 
@@ -74,6 +81,11 @@ class Reflector:
             server = f.get("server")
             if server not in servers:
                 server = None
+            if server is None:
+                # a "general" fact that names an attached server's tool is really about that server
+                hit = [s for s in servers if f"{s}." in f["fact"] or f" {s} " in f" {f['fact'].lower()} "]
+                if hit:
+                    server = hit[0]
             if self.memory.semantic.add(f["fact"], server, f.get("source_tool"), str(f.get("evidence", "")),
                                         trace.run_id, float(f.get("confidence", 0.6) or 0.6)):
                 written["facts_new"] += 1
