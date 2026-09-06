@@ -12,10 +12,10 @@
   },
   "crm.get_notes": {
     "description": "Get notes for a deal. Notes are free text written by sales reps.",
-    "calls": 0,
-    "ok": 0,
+    "calls": 3,
+    "ok": 3,
     "errors": 0,
-    "latency_total": 0.0,
+    "latency_total": 0.0012,
     "error_signatures": {},
     "conventions": [],
     "probed": false,
@@ -23,10 +23,10 @@
   },
   "crm.get_owner": {
     "description": "Get one owner by id.",
-    "calls": 2,
-    "ok": 2,
+    "calls": 4,
+    "ok": 4,
     "errors": 0,
-    "latency_total": 0.0006,
+    "latency_total": 0.0015,
     "error_signatures": {},
     "conventions": [
       "The 'active' field indicates if an owner is currently active. Inactive owners should be treated as 'UNASSIGNED' for reporting purposes."
@@ -36,10 +36,10 @@
   },
   "crm.list_deals": {
     "description": "List deals. Paginated: pass the returned next_cursor to get the next page. Optional stage filter.",
-    "calls": 17,
-    "ok": 14,
+    "calls": 22,
+    "ok": 19,
     "errors": 3,
-    "latency_total": 0.0131,
+    "latency_total": 0.0159,
     "error_signatures": {
       "invalid stage '*'": 3
     },

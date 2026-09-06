@@ -5,12 +5,14 @@
     "steps": [
       "Call crm.list_deals({}) to retrieve all deals, iterating with 'cursor' until all pages are collected.",
       "Filter the collected deals to identify 'OPEN' deals by checking their 'stage' (e.g., 'qualified', 'negotiation', 'proposal').",
-      "From the 'OPEN' deals, identify 'at-risk' deals by checking their 'health' status ('R' or 'A').",
+      "For each 'OPEN' deal, call crm.get_notes to retrieve any associated notes.",
+      "Identify 'at-risk' deals by checking their 'health' status ('R' or 'A') OR by analyzing the content of their notes for risk indicators (e.g., 'budget freeze', 'PO pending', 'no ETA').",
       "For each at-risk deal, call crm.get_owner to retrieve owner details.",
       "If the owner's 'active' status is false, report the owner as 'UNASSIGNED'; otherwise, use the owner's 'name'."
     ],
     "tools": [
       "crm.list_deals",
+      "crm.get_notes",
       "crm.get_owner"
     ],
     "servers": [
@@ -18,9 +20,27 @@
     ],
     "family": "crm_at_risk",
     "status": "candidate",
-    "proposed_run": "crm_at_risk-r03",
-    "version": 1,
+    "proposed_run": "crm_at_risk-r04",
+    "version": 2,
     "wins": 0,
-    "uses": 0
+    "uses": 1,
+    "promoted_run": "crm_at_risk-r04",
+    "previous_promoted": {
+      "name": "get_at_risk_deals",
+      "when": "Produce a report of at-risk deals from the CRM, including owner and reason.",
+      "steps": [
+        "Call crm.list_deals({}) to retrieve all deals, iterating with 'cursor' until all pages are collected.",
+        "Filter the collected deals to identify 'OPEN' deals by checking their 'stage' (e.g., 'qualified', 'negotiation', 'proposal').",
+        "From the 'OPEN' deals, identify 'at-risk' deals by checking their 'health' status ('R' or 'A').",
+        "For each at-risk deal, call crm.get_owner to retrieve owner details.",
+        "If the owner's 'active' status is false, report the owner as 'UNASSIGNED'; otherwise, use the owner's 'name'."
+      ],
+      "tools": [
+        "crm.list_deals",
+        "crm.get_owner"
+      ],
+      "version": 1,
+      "promoted_run": "crm_at_risk-r04"
+    }
   }
 ]

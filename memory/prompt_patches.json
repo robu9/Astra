@@ -1,9 +1,9 @@
 {
   "crm_at_risk@crm": {
-    "active": "To find all 'OPEN' deals, you must call crm.list_deals *without* a stage argument to get all deals, then filter by stage. Remember to paginate through all results using the 'cursor'. Deals with 'health' status 'R' or 'A' are considered at risk. For owners, use crm.get_owner and if 'active' is false, report 'UNASSIGNED'.",
+    "active": "To find all 'OPEN' deals, you must call crm.list_deals *without* a stage argument to get all deals, then filter by stage. Remember to paginate through all results using the 'cursor'. Deals with 'health' status 'R' or 'A' are considered at risk, but also check crm.get_notes for each OPEN deal, as notes can also indicate risk regardless of health status. For owners, use crm.get_owner and if 'active' is false, report 'UNASSIGNED'.",
     "candidate": {
-      "text": "To find all 'OPEN' deals, you must call crm.list_deals *without* a stage argument to get all deals, then filter by stage. Remember to paginate through all results using the 'cursor'. Deals with 'health' status 'R' or 'A' are considered at risk. For owners, use crm.get_owner and if 'active' is false, report 'UNASSIGNED'.",
-      "run": "crm_at_risk-r03"
+      "text": "To find all 'OPEN' deals, you must call crm.list_deals *without* a stage argument to get all deals, then filter by stage. Remember to paginate through all results using the 'cursor'. Deals with 'health' status 'R' or 'A' are considered at risk, but also check crm.get_notes for each OPEN deal, as notes can also indicate risk regardless of health status. For owners, use crm.get_owner and if 'active' is false, report 'UNASSIGNED'.",
+      "run": "crm_at_risk-r04"
     },
     "history": [
       {
@@ -17,8 +17,14 @@
         "run": "crm_at_risk-r02",
         "kept": true,
         "resolved_run": "crm_at_risk-r03"
+      },
+      {
+        "text": "To find all 'OPEN' deals, you must call crm.list_deals *without* a stage argument to get all deals, then filter by stage. Remember to paginate through all results using the 'cursor'. Deals with 'health' status 'R' or 'A' are considered at risk. For owners, use crm.get_owner and if 'active' is false, report 'UNASSIGNED'.",
+        "run": "crm_at_risk-r03",
+        "kept": true,
+        "resolved_run": "crm_at_risk-r04"
       }
     ],
-    "active_before_candidate": "To find all 'OPEN' deals, you must call crm.list_deals for *all* possible open stages, not just 'qualified' and 'negotiation'. The grader feedback indicates there are other stages to check. Only deals with 'health' status 'R' are at risk; 'A' is not. Remember to use crm.get_owner to resolve owner IDs for every deal."
+    "active_before_candidate": "To find all 'OPEN' deals, you must call crm.list_deals *without* a stage argument to get all deals, then filter by stage. Remember to paginate through all results using the 'cursor'. Deals with 'health' status 'R' or 'A' are considered at risk. For owners, use crm.get_owner and if 'active' is false, report 'UNASSIGNED'."
   }
 }
