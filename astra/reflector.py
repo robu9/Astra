@@ -45,6 +45,12 @@ Rules
   reflection refines it. Steps must be concrete tool calls in order, including "follow next_cursor until null" when the
   tool paginates. Return null only when the run was mostly wrong.
 - Be concrete. Mention exact tool names, arg names and values.
+- When the grader says specific records were wrong but nothing in the observed data distinguishes them, the explanation
+  is almost certainly in a tool the actor did NOT call (details, comments, notes, history). Do NOT invent a rule from
+  titles or ids; instead write a fact of the form "check <server.tool> for each record before deciding" and say so in
+  prompt_patch. Only state a business rule when the trace contains the evidence for it.
+- bad_facts: list every fact the actor was given that this run's evidence contradicts or that led to wrong actions.
+  Removing a wrong fact is as valuable as adding a right one.
 """
 
 
@@ -58,12 +64,15 @@ class Reflector:
                 allowed_tools: list[str]) -> dict:
         servers = self.gateway.attached()
         mem_used = self.memory.retrieve(trace.task, family, servers)
+        used_tools = {s.tool for s in trace.steps if s.tool}
+        unused = [t for t in allowed_tools if t not in used_tools]
         user = (
             f"TASK: {trace.task}\n\nGRADE: quality={quality:.2f} success={success}\nGRADER FEEDBACK: {feedback}\n\n"
             f"MEMORY THE ACTOR HAD:\nfacts={json.dumps([f['fact'] for f in mem_used['facts']])}\n"
             f"skill={json.dumps(mem_used['skills'][0] if mem_used['skills'] else None)}\n"
             f"prompt_patch={json.dumps(mem_used['prompt_patch'])}\n\n"
-            f"TOOLS AVAILABLE: {', '.join(allowed_tools)}\n\nTRACE:\n{trace.compact(limit_obs=700)}\n\n"
+            f"TOOLS AVAILABLE: {', '.join(allowed_tools)}\n"
+            f"TOOLS NEVER CALLED THIS RUN: {', '.join(unused) or 'none'}\n\nTRACE:\n{trace.compact(limit_obs=700)}\n\n"
             f"FINAL ANSWER: {json.dumps(trace.final, default=str)[:1500]}"
         )
         res = self.llm.chat(model, [{"role": "system", "content": REFLECT_SYSTEM}, {"role": "user", "content": user}],
@@ -94,9 +103,14 @@ class Reflector:
                 if self.memory.tool_model.add_convention(c["tool"], c["note"]):
                     written["conventions_new"] += 1
         for bad in out.get("bad_facts") or []:
+            if not isinstance(bad, str) or not bad.strip():
+                continue
+            b = bad.strip().lower()
             for f in list(self.memory.semantic.facts):
-                if isinstance(bad, str) and f["fact"].strip().lower() == bad.strip().lower():
-                    self.memory.semantic.demote(f["fact"], f.get("server"))
+                ft = f["fact"].strip().lower()
+                # exact match, or the model quoted a substantial prefix/substring of the stored fact
+                if ft == b or (len(b) > 30 and (b in ft or ft in b)):
+                    self.memory.semantic.demote(f["fact"], f.get("server"), amount=0.4)
                     written["facts_demoted"] += 1
         skill = out.get("skill")
         if isinstance(skill, dict) and skill.get("steps") and quality >= 0.5:

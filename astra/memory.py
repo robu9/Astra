@@ -97,6 +97,8 @@ class SemanticStore:
         for f in self.facts:
             if f.get("server") is not None and f["server"] not in servers:
                 continue
+            if f["confidence"] < 0.35:
+                continue  # demoted facts stay on disk for audit but are not shown to the actor
             overlap = len(kw & set(f.get("tags", []))) + len(kw & keywords(f["fact"]))
             score = f["confidence"] * (1 + 0.4 * overlap) + (0.3 if f.get("server") in servers else 0)
             scored.append((score, f))
