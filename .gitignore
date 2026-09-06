@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+runs/*/trace.jsonl
+.ao/
+*.log
