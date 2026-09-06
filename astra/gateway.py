@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -18,6 +19,26 @@ from astra.memory import Memory
 from astra.tools.base import ToolError, ToolServer, ToolSpec
 
 READ_PREFIXES = ("list", "get", "search", "find", "read", "fetch", "describe", "query", "show")
+
+
+def _name_words(name: str) -> set[str]:
+    expanded = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", name)
+    return set(re.findall(r"[a-z]+", expanded.lower()))
+
+
+def looks_write_capable(spec: ToolSpec, write_words: tuple[str, ...]) -> bool:
+    """Conservatively identify external write tools using MCP hints, name, and description."""
+    if spec.annotations.get("readOnlyHint") is True:
+        return False
+    if spec.annotations.get("destructiveHint") is True:
+        return True
+    words = _name_words(spec.name)
+    if any(word.rstrip("_") in words for word in write_words):
+        return True
+    description = spec.description.lower()
+    mutation_phrases = ("create ", "update ", "delete ", "remove ", "modify ", "send ", "post ",
+                        "assign ", "add ", "write ", "upload ", "merge ", "close ", "archive ")
+    return any(phrase in description for phrase in mutation_phrases)
 
 
 @dataclass
@@ -92,7 +113,7 @@ class ToolGateway:
         self.servers[server.name] = server
         names = []
         for spec in server.list_tools():
-            if any(spec.name.lower().startswith(d) for d in deny):
+            if deny and looks_write_capable(spec, deny):
                 continue
             q = f"{server.name}.{spec.name}"
             self.specs[q] = spec

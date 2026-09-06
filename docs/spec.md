@@ -15,7 +15,7 @@ todos:
     content: Provide two unseen fixture MCP apps plus a general-task runner that scores accuracy, reliability, cost, and latency across runs
     status: pending
   - id: ao-runtime
-    content: Each run and each reflection is an AO worker; scoreboard + growing memory previewed in AO browser
+    content: Learning iterations run sequentially as AO worker turns; scoreboard + growing memory previewed in AO browser
     status: pending
   - id: observability-demo
     content: Neatlogs traces, visible memory growth, run-1 vs run-N outputs, and a 3-5 min demo of a new MCP/task then improvement
@@ -50,7 +50,7 @@ Original Devpost still applies: generate architecture, run, analyze failure, imp
 
 You plug in:
 
-- Any MCP server or HTTP API (schema in, no hardcoded app logic)
+- Any MCP server (schema in, no hardcoded app logic); HTTP can be added through the same ToolServer interface
 - A general task in natural language
 - Optional success signal (grader, human thumbs, or task-defined check)
 
@@ -111,7 +111,7 @@ flowchart TB
 
 No GitHub-specific or Gmail-specific agent code.
 
-- Connect any MCP / OpenAPI-like tool list
+- Connect any MCP tool list; keep the adapter interface open for future transports
 - Discover names, schemas, required args
 - **Probe** unknown tools cheaply (read-only first when possible)
 - Record: what the tool actually returns, failure signatures, auth/permission errors, pagination quirks
@@ -190,7 +190,7 @@ How AO maps onto this agent:
 
 - Astra repo is the AO project
 - **Orchestrator** supervises: “run task T against MCP X”, “run reflection”, “attach a new MCP and repeat”
-- **Each task run** = AO worker (isolated worktree or scratch dir), so Kanban fills with real sessions
+- **Learning series** = one AO worker with sequential turns, so each run reads the memory committed by the prior turn
 - **Each reflection** can be a follow-up `ao send` on the same session or a small critic worker
 - Scoreboard + memory browser via `ao preview`
 
@@ -198,16 +198,15 @@ How AO maps onto this agent:
 flowchart LR
     Human[Task plus MCP]
     Orch[AO orchestrator]
-    Run[AO worker actor]
-    Ref[AO worker reflector]
+    Run[AO worker sequential turns]
+    Engine[Astra act grade reflect]
     Files[memory and metrics in repo]
     Preview[AO browser scoreboard]
 
     Human --> Orch
-    Orch -->|"ao spawn"| Run
-    Run --> Files
-    Orch -->|"ao spawn or ao send"| Ref
-    Ref --> Files
+    Orch -->|"ao spawn then ao send"| Run
+    Run --> Engine
+    Engine --> Files
     Files --> Preview
 ```
 

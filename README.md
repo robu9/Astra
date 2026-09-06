@@ -138,7 +138,7 @@ flowchart TB
 | Fixtures | `astra/fixtures/` | Two unseen "third-party apps" with hidden rules and API quirks |
 | Tasks + graders | `astra/tasks.py` | General tasks repeated over fresh snapshots; graders never leak rules |
 | LLM judge | `astra/judge.py` | Scores arbitrary user tasks when there is no grader |
-| AO client | `astra/ao_client.py` | `ao spawn` / `ao send` / HTTP fallback; one AO worker per learning run |
+| AO client | `astra/ao_client.py` | `ao spawn` / `ao send` / HTTP fallback; sequential learning turns in one AO worker |
 
 How AO wraps the runtime:
 
@@ -146,16 +146,15 @@ How AO wraps the runtime:
 flowchart LR
     Human[Task plus MCP]
     Orch[AO orchestrator]
-    Run[AO worker actor]
-    Ref[AO worker reflector]
+    Run[AO worker sequential turns]
+    Engine[Astra act grade reflect]
     Files[memory and metrics in repo]
     Preview[AO browser scoreboard]
 
     Human --> Orch
-    Orch -->|"ao spawn"| Run
-    Run --> Files
-    Orch -->|"ao spawn or ao send"| Ref
-    Ref --> Files
+    Orch -->|"ao spawn then ao send"| Run
+    Run --> Engine
+    Engine --> Files
     Files --> Preview
 ```
 
@@ -201,23 +200,23 @@ Levers, all measurable in `results.tsv`:
 - **Per-run read cache** in the gateway (`cached_calls` column).
 - **Probe once, ever** — return shapes live in the tool model.
 - **Tool-model hints** stop the actor re-discovering conventions (this is where most wasted calls on run 1 come from).
-- **Cost ceiling** per run (`Budget.max_cost_usd`); when approached the actor is told to answer now.
+- **Actor cost ceiling** (`Budget.max_cost_usd`); once crossed, the action loop makes no additional model or tool call.
 - **Skill first** — with a promoted skill the actor is told the exact step order and stops exploring.
 
 ---
 
 ## 6. Tool-agnostic by construction
 
-Astra sees only `ToolSpec {name, description, input_schema}` and JSON results. Three adapters implement `ToolServer`:
+Astra sees only `ToolSpec {name, description, input_schema, annotations}` and JSON results. Two adapters implement `ToolServer`:
 
 - `InProcessServer` — Python functions decorated with `@tool` (fixtures use this).
 - `MCPStdioServer` — any MCP server launched as a subprocess. Verified end to end by running the fixtures themselves as MCP processes (`--transport mcp`).
-- HTTP/OpenAPI — same interface; add an adapter, no changes elsewhere.
+An HTTP/OpenAPI adapter can be added behind the same interface, but is not included today.
 
 To attach a real third-party MCP:
 
 ```bash
-python -m astra attach \
+python3 -m astra attach \
   --mcp "gh=npx -y @modelcontextprotocol/server-github" \
   --task "List open PRs older than 7 days with reviewers and the blocker" \
   --schema '{"stale_prs":[{"number":"int","title":"string","reviewers":["string"],"blocker":"string"}]}' \
@@ -245,7 +244,7 @@ Each run uses seed `N`, so run 3 sees deals, owners, issues and comments run 1 n
 
 ## 8. Results
 
-Everything below is committed under `runs/` and `memory/` exactly as produced: **real model (Gemini 2.5 Flash), real MCP stdio transport, fresh memory, one continuous session** across three tool surfaces the agent had never seen. Each run uses a different data snapshot (ids, names and records change), so memorising an answer cannot help.
+The results below were produced with a **real model (Gemini 2.5 Flash), real MCP stdio transport, fresh memory, and one continuous session** across three previously unseen tool surfaces. The active `memory/` and `runs/` directories are intentionally reset for a fresh demo; the prior results remain auditable in Git history and in `docs/friend-branch-runs.*`. Each run used a different data snapshot (ids, names and records changed), so memorising an answer could not help.
 
 ```
 run                   mode         quality  ok calls errs   cost$  lat s facts skills  kept
@@ -301,29 +300,29 @@ git clone https://github.com/robu9/Astra.git && cd Astra
 cp .env.example .env       # set ASTRA_LLM_API_KEY (+ base URL / model names). Any OpenAI-compatible endpoint.
 
 # Full demo: unseen tool surface #1 x5, then unseen tool surface #2 x5, same agent
-python -m astra demo --runs 5
+python3 -m astra demo --runs 5
 
 # One family, through a real MCP stdio process
-python -m astra run tracker_triage --runs 5 --transport mcp
+python3 -m astra run tracker_triage --runs 5 --transport mcp
 
 # What Astra knows now
-python -m astra memory
+python3 -m astra memory
 
 # Regenerate the scoreboard, then open scoreboard/index.html
-python -m astra scoreboard
+python3 -m astra scoreboard
 
 # Attach any external MCP + any task (LLM-judged). Write-style tools are hidden unless --allow-writes.
 export GITHUB_PERSONAL_ACCESS_TOKEN=$(gh auth token)
-python -m astra attach --mcp "github=npx -y @modelcontextprotocol/server-github" \
+python3 -m astra attach --mcp "github=npx -y @modelcontextprotocol/server-github" \
   --task "Digest the 10 most recently updated open 'bug' issues in owner/repo: number, title, age_days, comments, assigned" \
   --schema '{"issues":[{"number":"int","title":"string","age_days":"int","comments":"int","assigned":"bool"}]}' \
   --family gh_bug_digest --runs 4
 
 # Start over
-python -m astra reset
+python3 -m astra reset
 ```
 
-Offline smoke test without a key: `ASTRA_LLM=mock python -m astra --memory /tmp/m --runs /tmp/r demo --runs 3`.
+Offline smoke test without a key: `ASTRA_LLM=mock python3 -m astra --memory /tmp/m --runs /tmp/r demo --runs 3`.
 
 Inside an AO worker session, preview the scoreboard beside the agent: `ao preview scoreboard/index.html`.
 
@@ -346,7 +345,7 @@ AO usage was mandatory and is 25 % of the score. AO played two roles.
 
 Reviews and fixes (e.g. the `@tool` schema leaking `self`, observation truncation hiding `next_cursor`, skills being demoted back to candidate on re-proposal) were routed back to the owning session.
 
-**Role 2 — run plane.** Every learning iteration can be an AO worker: `python -m astra ao-run crm_at_risk --runs 5` spawns one session per run with the prompt in `astra/ao_client.py:worker_prompt`. The worker executes the `learning-run` skill (`.agents/skills/learning-run/SKILL.md`), commits `memory/`, `runs/`, `scoreboard/data.js`, and reports what Astra learned. The Kanban therefore shows the agent's learning history as sessions, and `ao preview scoreboard/index.html` shows the curves beside the worker.
+**Role 2 — run plane.** `python3 -m astra ao-run crm_at_risk --runs 5` creates one AO worker and sends it five sequential learning turns. Waiting between turns guarantees that run N+1 sees run N's committed memory. The worker follows the `learning-run` skill (`.agents/skills/learning-run/SKILL.md`), commits `memory/`, `runs/`, `scoreboard/data.js`, and reports what Astra learned. The AO transcript shows the learning history, and `ao preview scoreboard/index.html` shows the curves beside it.
 
 `AGENTS.md` tells any AO worker the rules (keep Astra tool-agnostic, never leak rules through graders, never hand-edit memory). The demo video shows the AO dashboard with the session count, a run-1 vs run-N comparison, the memory files growing, and a second MCP attached with no code change.
 
@@ -364,7 +363,7 @@ astra/
   engine.py         run -> grade -> keep/revert -> reflect -> record
   judge.py          LLM judge for arbitrary tasks
   llm.py            OpenAI-compatible client + cost accounting + offline mock
-  ao_client.py      AO spawn/send, one worker per learning run
+  ao_client.py      AO spawn/send/status wait, sequential learning in one worker
   scoreboard.py     builds scoreboard/data.js
   cli.py            demo | run | attach | ao-run | memory | scoreboard | reset
   tools/            base ToolServer, MCP stdio client, MCP server shim

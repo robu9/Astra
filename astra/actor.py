@@ -1,8 +1,8 @@
 """Actor: does the task using tools + retrieved memory. No app-specific logic lives here."""
 from __future__ import annotations
 
+import hashlib
 import json
-import time
 from dataclasses import dataclass, field
 
 from astra.controller import Budget
@@ -37,6 +37,7 @@ class Step:
     model: str
     cost_usd: float
     tokens: int
+    executed: bool = True
 
 
 @dataclass
@@ -66,7 +67,8 @@ class RunTrace:
         for s in self.steps:
             if s.tool:
                 obs = (s.observation or "")[:limit_obs]
-                lines.append(f"[{s.idx}] {s.tool}({json.dumps(s.args, default=str)}) -> {'OK' if s.ok else 'ERROR'}: {obs}")
+                status = "BLOCKED" if not s.executed else ("OK" if s.ok else "ERROR")
+                lines.append(f"[{s.idx}] {s.tool}({json.dumps(s.args, default=str)}) -> {status}: {obs}")
             else:
                 lines.append(f"[{s.idx}] FINAL: {json.dumps(s.args or self.final, default=str)[:limit_obs]}")
         return "\n".join(lines)
@@ -158,6 +160,8 @@ class Actor:
         messages = [{k: v for k, v in m.items() if k != "system_hidden"} for m in messages]
 
         malformed = 0
+        attempted_calls: dict[str, tuple[int, bool, bool]] = {}
+        repeated_calls = 0
         for idx in range(1, budget.max_steps + 1):
             res = self.llm.chat(budget.model, messages, max_tokens=budget.max_tokens_reply)
             trace.llm_cost_usd += res.cost_usd
@@ -166,6 +170,12 @@ class Actor:
             reply = normalize_reply(parse_json(res.text))
             thought = str(reply.get("thought", ""))[:400]
             messages.append({"role": "assistant", "content": res.text if len(res.text) < 4000 else json.dumps(reply)})
+
+            # A provider can overshoot the ceiling in a single response, but once
+            # crossed Astra must not spend on another call or touch another tool.
+            if trace.llm_cost_usd >= budget.max_cost_usd and "final" not in reply:
+                trace.stop_reason = "cost_budget_exhausted"
+                break
 
             if "final" in reply and reply["final"] is not None:
                 trace.final = reply["final"]
@@ -194,7 +204,29 @@ class Actor:
             malformed = 0
             if not isinstance(args, dict):
                 args = {}
+            signature = hashlib.sha1(
+                f"{tool}|{json.dumps(args, sort_keys=True, default=str)}".encode()
+            ).hexdigest()
+            previous = attempted_calls.get(signature)
+            # Successful reads may repeat safely through the gateway's in-run cache.
+            # Failed calls and writes are never executed twice with identical args.
+            if previous and (not previous[1] or not previous[2]):
+                repeated_calls += 1
+                obs = (f"ERROR: blocked repeated identical call to {tool}; it was already attempted at step "
+                       f"{previous[0]}. Change the arguments or return a final answer.")
+                trace.steps.append(Step(idx, thought, tool, args, obs, False, res.latency_s, res.model,
+                                        res.cost_usd, res.prompt_tokens + res.completion_tokens, executed=False))
+                if on_step:
+                    on_step(trace.steps[-1])
+                messages.append({"role": "user", "content": obs})
+                if repeated_calls >= 2:
+                    trace.stop_reason = "repeated_tool_calls"
+                    break
+                continue
             rec = self.gateway.call(tool, args)
+            tool_name = tool.split(".", 1)[-1].lower()
+            is_read = tool_name.startswith(("list", "get", "search", "find", "read", "fetch", "describe", "query", "show"))
+            attempted_calls[signature] = (idx, rec.ok, is_read)
             obs = rec.result_preview if rec.ok else f"ERROR: {rec.error}"
             if trace.llm_cost_usd > budget.max_cost_usd:
                 obs += "\n(cost budget nearly exhausted: give your best 'final' answer now)"
@@ -205,7 +237,7 @@ class Actor:
             messages.append({"role": "user", "content": f"OBSERVATION from {tool}:\n{obs}"})
         else:
             trace.stop_reason = "step_budget_exhausted"
-        if not trace.finished:
+        if not trace.finished and trace.stop_reason != "cost_budget_exhausted":
             # One last chance to answer from what it has, with a generous token cap.
             messages.append({"role": "user", "content": "Stop calling tools. Return your best 'final' now as one JSON object."})
             res = self.llm.chat(budget.model, messages, max_tokens=max(budget.max_tokens_reply, 8000))

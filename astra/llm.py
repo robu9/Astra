@@ -87,7 +87,7 @@ class LLM:
         self.timeout = timeout
 
     def chat(self, model: str, messages: list[dict], temperature: float = 0.2, json_mode: bool = True,
-             max_tokens: int = 4000) -> LLMResult:
+             max_tokens: int = 4000, _attempt: int = 0) -> LLMResult:
         body = {
             "model": model,
             "messages": messages,
@@ -114,8 +114,17 @@ class LLM:
             detail = e.read().decode("utf-8", errors="replace")[:500]
             if json_mode and "response_format" in detail:
                 # Some OpenAI-compatible servers reject response_format; retry plain.
-                return self.chat(model, messages, temperature, json_mode=False, max_tokens=max_tokens)
+                return self.chat(model, messages, temperature, json_mode=False, max_tokens=max_tokens,
+                                 _attempt=_attempt)
+            if _attempt < 2 and (e.code in (408, 409, 425, 429) or e.code >= 500):
+                time.sleep(0.5 * (2 ** _attempt))
+                return self.chat(model, messages, temperature, json_mode, max_tokens, _attempt + 1)
             raise RuntimeError(f"LLM HTTP {e.code}: {detail}") from e
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            if _attempt < 2:
+                time.sleep(0.5 * (2 ** _attempt))
+                return self.chat(model, messages, temperature, json_mode, max_tokens, _attempt + 1)
+            raise RuntimeError(f"LLM request failed after {_attempt + 1} attempts: {e}") from e
         latency = time.perf_counter() - t0
         choice = payload["choices"][0]
         text = choice["message"].get("content") or ""

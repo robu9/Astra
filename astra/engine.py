@@ -61,53 +61,77 @@ class Engine:
     # --- one run ------------------------------------------------------------------------------------------------
     def run_once(self, family_name: str, task: str, answer_schema: dict, servers: list[ToolServer], seed: int,
                  grader=None, run_id: str | None = None, deny: tuple[str, ...] = ()) -> RunResult:
-        run_id = run_id or f"{family_name}-{int(time.time())}-{seed}"
-        names = []
-        for s in servers:
-            names += self.gateway.attach(s, deny=deny)
-        server_names = self.gateway.attached()
-        budget = self.controller.plan_run(task, family_name, server_names, names)
-        self.log(f"\n== {run_id}  mode={budget.mode} model={budget.model}  ({budget.reason})")
-        t0 = time.perf_counter()
-        trace = self.actor.run(run_id, task, family_name, answer_schema, budget,
-                               on_step=lambda st: self.log(f"   [{st.idx}] {st.tool or 'FINAL'} "
-                                                           f"{json.dumps(st.args, default=str)[:90]} -> {'ok' if st.ok else 'ERR'}"))
-        wall = time.perf_counter() - t0
+        run_id = self._unique_run_id(run_id or f"{family_name}-{int(time.time())}-{seed}")
+        names: list[str] = []
+        try:
+            server_ids = [s.name for s in servers]
+            if len(server_ids) != len(set(server_ids)):
+                raise ValueError("attached ToolServer names must be unique")
+            for s in servers:
+                names += self.gateway.attach(s, deny=deny)
+            server_names = self.gateway.attached()
+            budget = self.controller.plan_run(task, family_name, server_names, names)
+            self.log(f"\n== {run_id}  mode={budget.mode} model={budget.model}  ({budget.reason})")
+            t0 = time.perf_counter()
+            trace = self.actor.run(run_id, task, family_name, answer_schema, budget,
+                                   on_step=lambda st: self.log(f"   [{st.idx}] {st.tool or 'FINAL'} "
+                                                               f"{json.dumps(st.args, default=str)[:90]} -> "
+                                                               f"{'ok' if st.ok else 'ERR'}"))
+            wall = time.perf_counter() - t0
 
-        if grader is not None:
-            quality, feedback, success = grader(servers[0], trace.final)
-        else:
-            from astra.judge import llm_grade
-            quality, feedback, success = llm_grade(self.llm, self.models["fast"], task, trace.final, trace.compact())
-        self.log(f"   quality={quality:.2f} success={success} calls={self.gateway.run_stats()['tool_calls']} "
-                 f"cost=${trace.llm_cost_usd:.4f} wall={wall:.1f}s\n   feedback: {feedback}")
+            if grader is not None:
+                quality, feedback, success = grader(servers[0], trace.final)
+            else:
+                from astra.judge import llm_grade
+                quality, feedback, success = llm_grade(self.llm, self.models["fast"], task, trace.final, trace.compact())
+            self.log(f"   quality={quality:.2f} success={success} calls={self.gateway.run_stats()['tool_calls']} "
+                     f"cost=${trace.llm_cost_usd:.4f} wall={wall:.1f}s\n   feedback: {feedback}")
 
-        # keep-or-revert candidates proposed after the previous run
-        kept = self._resolve_candidates(family_name, server_names, quality, run_id)
-        self.memory.skills.record_use(family_name, server_names, success)
+            # keep-or-revert candidates proposed after the previous run
+            kept = self._resolve_candidates(family_name, server_names, quality, run_id)
+            self.memory.skills.record_use(family_name, server_names, success)
 
-        rmodel = self.controller.reflection_model(quality)
-        reflection = self.reflector.reflect(trace, family_name, quality, feedback, success, rmodel, names)
-        self.log(f"   reflect[{rmodel}]: +{reflection['facts_new']} facts, +{reflection['conventions_new']} tool notes, "
-                 f"skill={reflection['skill']}, prompt_patch={reflection['prompt_patch']}"
-                 + (f"\n   went wrong: {reflection['what_went_wrong']}" if reflection.get("what_went_wrong") else ""))
+            rmodel = self.controller.reflection_model(quality)
+            reflection = self.reflector.reflect(trace, family_name, quality, feedback, success, rmodel, names)
+            self.log(f"   reflect[{rmodel}]: +{reflection['facts_new']} facts, +{reflection['conventions_new']} tool notes, "
+                     f"skill={reflection['skill']}, prompt_patch={reflection['prompt_patch']}"
+                     + (f"\n   went wrong: {reflection['what_went_wrong']}"
+                        if reflection.get("what_went_wrong") else ""))
 
-        snap = self.memory.snapshot(server_names)
-        stats = self.gateway.run_stats()
-        metrics = {
-            "run_id": run_id, "family": family_name, "servers": "+".join(server_names), "seed": seed, "mode": budget.mode,
-            "model": budget.model, "quality": quality, "success": success, "tool_calls": stats["tool_calls"],
-            "tool_errors": stats["tool_errors"], "cached_calls": stats["cached_calls"], "llm_tokens": trace.tokens,
-            "cost_usd": round(trace.llm_cost_usd, 6), "reflect_cost_usd": round(reflection["cost_usd"], 6),
-            "latency_s": round(wall, 3), "facts": snap["facts"], "skills_promoted": snap["skills_promoted"],
-            "skills_candidate": snap["skills_candidate"], "tools_known": snap["tools_known"], "kept": kept,
-            "what_went_wrong": reflection.get("what_went_wrong", "").replace("\t", " ").replace("\n", " "),
-        }
-        self._persist(run_id, trace.to_dict() | {"quality": quality, "feedback": feedback}, reflection, metrics)
-        for s in servers:
-            self.gateway.detach(s.name)
-        return RunResult(run_id, family_name, server_names, seed, quality, success, feedback, trace.to_dict(),
-                         reflection, metrics)
+            snap = self.memory.snapshot(server_names)
+            stats = self.gateway.run_stats()
+            metrics = {
+                "run_id": run_id, "family": family_name, "servers": "+".join(server_names), "seed": seed,
+                "mode": budget.mode, "model": budget.model, "quality": quality, "success": success,
+                "tool_calls": stats["tool_calls"], "tool_errors": stats["tool_errors"],
+                "cached_calls": stats["cached_calls"], "llm_tokens": trace.tokens,
+                "cost_usd": round(trace.llm_cost_usd, 6),
+                "reflect_cost_usd": round(reflection["cost_usd"], 6), "latency_s": round(wall, 3),
+                "facts": snap["facts"], "skills_promoted": snap["skills_promoted"],
+                "skills_candidate": snap["skills_candidate"], "tools_known": snap["tools_known"], "kept": kept,
+                "what_went_wrong": reflection.get("what_went_wrong", "").replace("\t", " ").replace("\n", " "),
+            }
+            self._persist(run_id, trace.to_dict() | {"quality": quality, "feedback": feedback}, reflection, metrics)
+            return RunResult(run_id, family_name, server_names, seed, quality, success, feedback, trace.to_dict(),
+                             reflection, metrics)
+        finally:
+            for s in servers:
+                if s.name in self.gateway.servers:
+                    self.gateway.detach(s.name)
+                else:
+                    s.close()
+
+    def _unique_run_id(self, base: str) -> str:
+        """Keep result rows and trace directories one-to-one when a seed is rerun."""
+        used = set()
+        tsv = self.runs_root / "results.tsv"
+        if tsv.exists():
+            used.update(line.split("\t", 1)[0] for line in tsv.read_text(encoding="utf-8").splitlines()[1:])
+        candidate, revision = base, 2
+        while candidate in used or (self.runs_root / candidate).exists():
+            candidate = f"{base}-attempt{revision:02d}"
+            revision += 1
+        return candidate
 
     def _resolve_candidates(self, family: str, servers: list[str], quality: float, run_id: str) -> str:
         eps = self.memory.episodic.recent(family, servers, n=1)
@@ -115,7 +139,7 @@ class Engine:
             return "n/a"
         prev = eps[-1].get("quality", 0.0)
         keep = quality >= prev - 0.05  # tolerate noise from the fresh data snapshot
-        has_cand = self.memory.skills.count("candidate") > 0 or bool(
+        has_cand = self.memory.skills.has_candidate(family, servers) or bool(
             self.memory.prompt_patches.get(f"{family}@{'+'.join(sorted(servers))}", {}).get("candidate"))
         if keep:
             self.memory.skills.promote(family, servers, run_id)

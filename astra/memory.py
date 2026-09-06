@@ -124,8 +124,12 @@ class SkillStore:
             if s["family"] == family and set(s["servers"]) == set(servers) and s["status"] != "rejected":
                 if s["steps"] == steps and s["tools"] == tools:
                     return s  # nothing new learned; keep status as is
-                # promoted skills are revised in place (revision is judged next run via episodic quality);
-                # candidates stay candidates until the next run confirms them
+                # Revisions must be candidates too. Preserve the promoted recipe so a
+                # regression on the next run can restore it exactly.
+                if s["status"] == "promoted":
+                    s["previous_promoted"] = {k: s.get(k) for k in
+                                              ("name", "when", "steps", "tools", "version", "promoted_run")}
+                    s["status"] = "candidate"
                 s.update({"name": name, "when": when, "steps": steps, "tools": tools,
                           "proposed_run": run_id, "version": s.get("version", 1) + 1})
                 _save(self.path, self.skills)
@@ -141,14 +145,22 @@ class SkillStore:
             if s["family"] == family and set(s["servers"]) == set(servers) and s["status"] == "candidate":
                 s["status"] = "promoted"
                 s["promoted_run"] = run_id
+                s.pop("previous_promoted", None)
         _save(self.path, self.skills)
 
     def reject_candidate(self, family: str, servers: list[str], run_id: str, reason: str) -> None:
         for s in self.skills:
             if s["family"] == family and set(s["servers"]) == set(servers) and s["status"] == "candidate":
-                s["status"] = "rejected"
-                s["rejected_run"] = run_id
-                s["reason"] = reason
+                previous = s.pop("previous_promoted", None)
+                if previous:
+                    s.update(previous)
+                    s["status"] = "promoted"
+                    s["last_reverted_run"] = run_id
+                    s["last_revert_reason"] = reason
+                else:
+                    s["status"] = "rejected"
+                    s["rejected_run"] = run_id
+                    s["reason"] = reason
         _save(self.path, self.skills)
 
     def record_use(self, family: str, servers: list[str], won: bool) -> None:
@@ -172,8 +184,14 @@ class SkillStore:
                 out.append(s)
         return out
 
-    def count(self, status: str | None = None) -> int:
-        return sum(1 for s in self.skills if status is None or s["status"] == status)
+    def count(self, status: str | None = None, servers: list[str] | None = None) -> int:
+        return sum(1 for s in self.skills
+                   if (status is None or s["status"] == status)
+                   and (servers is None or set(s["servers"]) <= set(servers)))
+
+    def has_candidate(self, family: str, servers: list[str]) -> bool:
+        return any(s["family"] == family and set(s["servers"]) == set(servers)
+                   and s["status"] == "candidate" for s in self.skills)
 
 
 class ToolModel:
@@ -285,11 +303,13 @@ class Memory:
         }
 
     def snapshot(self, servers: list[str]) -> dict:
+        prefixes = tuple(f"{server}." for server in servers)
         return {
             "facts": self.semantic.count(servers),
-            "skills_promoted": self.skills.count("promoted"),
-            "skills_candidate": self.skills.count("candidate"),
-            "tools_known": sum(1 for q in self.tool_model.tools if self.tool_model.known(q)),
+            "skills_promoted": self.skills.count("promoted", servers),
+            "skills_candidate": self.skills.count("candidate", servers),
+            "tools_known": sum(1 for q in self.tool_model.tools
+                               if q.startswith(prefixes) and self.tool_model.known(q)),
             "episodes": len(self.episodic.all()),
         }
 
@@ -297,6 +317,11 @@ class Memory:
         for p in self.root.glob("*"):
             if p.is_file():
                 p.unlink()
+        (self.root / "episodic.jsonl").touch()
+        for name in ("semantic.json", "skills.json"):
+            _save(self.root / name, [])
+        for name in ("tool_model.json", "prompt_patches.json"):
+            _save(self.root / name, {})
         self.__init__(self.root)
 
     def created_at(self) -> float:

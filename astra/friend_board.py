@@ -1,6 +1,6 @@
 """Write scoreboard/friend-runs-data.js from docs/friend-branch-runs.json.
 
-  python -m astra.friend_board
+  python3 -m astra.friend_board
 Then open scoreboard/friend-runs.html (file:// or `ao preview scoreboard/friend-runs.html`).
 """
 from __future__ import annotations

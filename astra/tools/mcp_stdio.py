@@ -12,6 +12,7 @@ import os
 import shutil
 import subprocess
 import threading
+from collections import deque
 from typing import Any
 
 from astra.tools.base import ToolError, ToolServer, ToolSpec
@@ -22,20 +23,36 @@ PROTOCOL_VERSION = "2025-06-18"
 class MCPStdioServer(ToolServer):
     def __init__(self, name: str, command: list[str], env: dict | None = None, cwd: str | None = None,
                  timeout: float = 60.0):
+        if not name.strip():
+            raise ValueError("MCP server name must not be empty")
+        if not command:
+            raise ValueError("MCP command must not be empty")
         self.name = name
         self.timeout = timeout
         merged = dict(os.environ)
         merged.update(env or {})
         resolved = shutil.which(command[0]) or command[0]  # Windows: npx -> npx.cmd, node -> node.exe
         command = [resolved] + list(command[1:])
-        self.proc = subprocess.Popen(
-            command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            env=merged, cwd=cwd, text=True, encoding="utf-8", bufsize=1,
-        )
+        self.proc = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                     env=merged, cwd=cwd, text=True, encoding="utf-8", bufsize=1)
         self._id = 0
         self._lock = threading.Lock()
         self._tools: list[ToolSpec] | None = None
-        self._initialize()
+        self._stderr_tail: deque[str] = deque(maxlen=50)
+        self._stderr_thread = threading.Thread(target=self._drain_stderr, daemon=True)
+        self._stderr_thread.start()
+        try:
+            self._initialize()
+        except Exception:
+            self.close()
+            raise
+
+    def _drain_stderr(self) -> None:
+        """Prevent verbose MCP servers from blocking on a full stderr pipe."""
+        if not self.proc.stderr:
+            return
+        for line in self.proc.stderr:
+            self._stderr_tail.append(line.rstrip())
 
     # --- JSON-RPC plumbing -------------------------------------------------
     def _send(self, msg: dict) -> None:
@@ -73,6 +90,7 @@ class MCPStdioServer(ToolServer):
             t.start()
             t.join(self.timeout)
             if t.is_alive():
+                self.close()  # stop the orphan reader before another request can steal its response
                 raise ToolError(f"MCP '{method}' timed out after {self.timeout}s")
             if "error" in result:
                 err = result["error"]
@@ -93,7 +111,8 @@ class MCPStdioServer(ToolServer):
             res = self._request("tools/list") or {}
             self._tools = [
                 ToolSpec(name=t["name"], description=t.get("description", ""),
-                         input_schema=t.get("inputSchema") or {"type": "object", "properties": {}})
+                         input_schema=t.get("inputSchema") or {"type": "object", "properties": {}},
+                         annotations=t.get("annotations") or {})
                 for t in res.get("tools", [])
             ]
         return self._tools
@@ -114,6 +133,18 @@ class MCPStdioServer(ToolServer):
 
     def close(self) -> None:
         try:
-            self.proc.terminate()
+            if self.proc.poll() is None:
+                self.proc.terminate()
+                try:
+                    self.proc.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    self.proc.kill()
+                    self.proc.wait(timeout=2)
         except Exception:
             pass
+        for stream in (self.proc.stdin, self.proc.stdout, self.proc.stderr):
+            try:
+                if stream:
+                    stream.close()
+            except Exception:
+                pass

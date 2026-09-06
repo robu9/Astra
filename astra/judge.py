@@ -24,4 +24,6 @@ def llm_grade(llm, model: str, task: str, final, trace_text: str) -> tuple[float
     except (TypeError, ValueError):
         q = 0.0
     q = max(0.0, min(1.0, q))
-    return q, str(out.get("feedback", ""))[:500], bool(out.get("success", q >= 0.85))
+    success_raw = out.get("success", q >= 0.85)
+    success = success_raw if isinstance(success_raw, bool) else q >= 0.85
+    return q, str(out.get("feedback", ""))[:500], success

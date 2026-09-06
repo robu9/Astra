@@ -12,7 +12,7 @@ Astra is a self-improving tool-using agent. Read `README.md` first. Design in `d
 - `astra/tools/mcp_stdio.py` real MCP client; `astra/tools/mcp_serve.py` exposes fixtures as MCP servers
 - `astra/fixtures/` unseen third-party stand-ins (CRM, tracker). Astra has no code that knows about them.
 - `astra/tasks.py` task families + graders. Graders never leak hidden rules.
-- `scoreboard/` static scoreboard; `python -m astra scoreboard` regenerates `scoreboard/data.js`
+- `scoreboard/` static scoreboard; `python3 -m astra scoreboard` regenerates `scoreboard/data.js`
 
 ## Rules for workers
 
@@ -20,7 +20,7 @@ Astra is a self-improving tool-using agent. Read `README.md` first. Design in `d
 - Never let graders reveal hidden rules; they may name what kind of thing was wrong and which ids.
 - Learning runs commit `memory/`, `runs/results.tsv`, `runs/<run>/`, `scoreboard/data.js`. Do not hand-edit memory.
 - Stdlib only. Python 3.11+.
-- Smoke test: `ASTRA_LLM=mock python -m astra --memory /tmp/m --runs /tmp/r demo --runs 3`
+- Smoke test: `ASTRA_LLM=mock python3 -m astra --memory /tmp/m --runs /tmp/r demo --runs 3`
 
 ## AO skills
 

@@ -15,6 +15,7 @@ class ToolSpec:
     name: str
     description: str
     input_schema: dict = field(default_factory=lambda: {"type": "object", "properties": {}})
+    annotations: dict = field(default_factory=dict)
 
     def required(self) -> list[str]:
         return list(self.input_schema.get("required", []))
@@ -28,7 +29,7 @@ class ToolSpec:
 
 
 class ToolServer:
-    """Minimal interface every adapter implements (in-process fixture, MCP stdio, HTTP)."""
+    """Minimal interface every adapter implements (currently in-process fixtures and MCP stdio)."""
 
     name: str
 

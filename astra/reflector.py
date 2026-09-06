@@ -128,8 +128,10 @@ class Reflector:
 
         self.memory.episodic.append({
             "run_id": trace.run_id, "family": family, "task": trace.task[:200], "servers": servers,
-            "quality": round(quality, 3), "success": success, "tool_calls": sum(1 for s in trace.steps if s.tool),
-            "tool_errors": sum(1 for s in trace.steps if s.tool and not s.ok), "cost_usd": round(trace.llm_cost_usd, 5),
+            "quality": round(quality, 3), "success": success,
+            "tool_calls": sum(1 for s in trace.steps if s.tool and s.executed),
+            "tool_errors": sum(1 for s in trace.steps if s.tool and s.executed and not s.ok),
+            "cost_usd": round(trace.llm_cost_usd, 5),
             "what_went_wrong": str(out.get("what_went_wrong", ""))[:300], "mode": trace.budget.get("mode"),
         })
         written["what_went_wrong"] = str(out.get("what_went_wrong", ""))[:300]

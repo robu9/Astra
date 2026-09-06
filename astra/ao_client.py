@@ -3,14 +3,16 @@
 AO exposes a loopback daemon (127.0.0.1:3001) and a thin `ao` CLI. We never import AO code; we drive it the way
 AO's own orchestrator does: `ao spawn`, `ao send`, `ao session ls`. HTTP is used when the CLI is not on PATH.
 
-Each Astra learning run becomes one AO worker session; reflections are follow-up messages to the same session.
+One AO worker receives learning iterations sequentially; each next turn starts only after the previous turn is idle.
 """
 from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
+import time
 import urllib.error
 import urllib.request
 
@@ -56,9 +58,17 @@ class AOClient:
             if out.returncode != 0:
                 raise RuntimeError(f"ao spawn failed: {out.stderr.strip() or out.stdout.strip()}")
             text = out.stdout.strip()
-            for tok in text.replace("\n", " ").split():
-                if tok.startswith("ao-"):
-                    return tok.strip(".,:")
+            try:
+                payload = json.loads(text)
+                if isinstance(payload, dict):
+                    found = payload.get("id") or payload.get("sessionId") or payload.get("session", {}).get("id")
+                    if found:
+                        return str(found)
+            except json.JSONDecodeError:
+                pass
+            ids = re.findall(r"\b[a-zA-Z][a-zA-Z0-9_-]*-\d+\b", text)
+            if ids:
+                return ids[-1]
             return text
         body = {"prompt": prompt, **({"projectId": self.project} if self.project else {}),
                 **({"agent": self.agent} if self.agent else {}), **({"name": name} if name else {})}
@@ -67,30 +77,81 @@ class AOClient:
 
     def send(self, session_id: str, message: str) -> None:
         if self.cli:
-            subprocess.run([self.cli, "send", "--session", session_id, "--message", message], check=False,
-                           capture_output=True, text=True, timeout=60)
+            out = subprocess.run([self.cli, "send", "--session", session_id, "--message", message], check=False,
+                                 capture_output=True, text=True, timeout=60)
+            if out.returncode != 0:
+                raise RuntimeError(f"ao send failed: {out.stderr.strip() or out.stdout.strip()}")
             return
         self._http("POST", f"/sessions/{session_id}/send", {"message": message})
+
+    def get_session(self, session_id: str) -> dict:
+        if self.cli:
+            cmd = [self.cli, "session", "get", session_id, "--json"]
+            if self.project:
+                cmd += ["--project", self.project]
+            out = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            if out.returncode != 0:
+                raise RuntimeError(f"ao session get failed: {out.stderr.strip() or out.stdout.strip()}")
+            return json.loads(out.stdout)
+        res = self._http("GET", f"/sessions/{session_id}")
+        return res.get("session", res) if isinstance(res, dict) else {}
+
+    @staticmethod
+    def _states(value) -> set[str]:
+        states: set[str] = set()
+        if isinstance(value, dict):
+            for key, item in value.items():
+                if key.lower() in {"status", "state", "agentstatus", "agent_status"} and isinstance(item, str):
+                    states.add(item.lower().replace("-", "_").replace(" ", "_"))
+                states.update(AOClient._states(item))
+        elif isinstance(value, list):
+            for item in value:
+                states.update(AOClient._states(item))
+        return states
+
+    def wait_until_idle(self, session_id: str, timeout: float = 1800, poll: float = 5) -> dict:
+        """Wait until a worker finishes its turn before sending the next learning iteration."""
+        deadline = time.monotonic() + timeout
+        idle_polls = 0
+        failed = {"failed", "error", "terminated", "killed", "crashed"}
+        idle = {"idle", "waiting", "awaiting_input", "completed", "complete", "done", "stopped"}
+        while time.monotonic() < deadline:
+            session = self.get_session(session_id)
+            states = self._states(session)
+            if states & failed:
+                raise RuntimeError(f"AO session {session_id} failed with state(s): {sorted(states)}")
+            if states & idle:
+                idle_polls += 1
+                if idle_polls >= 2:
+                    return session
+            else:
+                idle_polls = 0
+            time.sleep(max(0.2, poll))
+        raise TimeoutError(f"AO session {session_id} did not become idle within {timeout:.0f}s")
 
     def sessions(self) -> list[dict]:
         if self.cli:
             out = subprocess.run([self.cli, "session", "ls", "--json"], capture_output=True, text=True, timeout=30)
+            if out.returncode != 0:
+                raise RuntimeError(f"ao session ls failed: {out.stderr.strip() or out.stdout.strip()}")
             try:
                 data = json.loads(out.stdout)
-                return data if isinstance(data, list) else data.get("sessions", [])
+                return data if isinstance(data, list) else data.get("sessions", data.get("data", []))
             except json.JSONDecodeError:
                 return []
         res = self._http("GET", "/sessions")
         return res if isinstance(res, list) else res.get("sessions", [])
 
 
-def worker_prompt(family: str, seed: int, transport: str = "inprocess") -> str:
+def worker_prompt(family: str, seed: int, transport: str = "inprocess", followup: bool = False) -> str:
     """The instruction an AO worker receives to execute exactly one Astra learning run and commit its artefacts."""
     return (
-        f"You are an Astra learning-run worker. In this repo run exactly one learning iteration and commit its artefacts.\n"
-        f"1. `python -m astra run {family} --runs 1 --seed {seed} --transport {transport}`\n"
-        f"2. Read runs/{family}-r{seed:02d}/reflection.json and memory/*.json; summarise in one paragraph what Astra learned "
+        ("Continue the same Astra learning series. " if followup else "You are an Astra learning-run worker. ")
+        + f"Run exactly one learning iteration for {family} seed {seed} and commit its artefacts.\n"
+        f"1. `python3 -m astra run {family} --runs 1 --seed {seed} --transport {transport}`\n"
+        f"2. Read the last row of runs/results.tsv to get the collision-safe run_id. Read that run's reflection.json "
+        f"and memory/*.json; summarise in one paragraph what Astra learned "
         f"(new facts, tool conventions, skill status) and how quality/cost/latency moved vs the previous row in runs/results.tsv.\n"
-        f"3. `python -m astra scoreboard` then commit memory/, runs/results.tsv, runs/{family}-r{seed:02d}/ and scoreboard/data.js "
+        f"3. `python3 -m astra scoreboard` then commit memory/, runs/results.tsv, the new run directory, and scoreboard/data.js "
         f"with message 'learn({family}): run r{seed:02d}'. Push. Do not edit agent code."
     )

@@ -2,8 +2,8 @@
 
 Used to run Astra's fixtures as genuine MCP processes so the MCP client path is exercised:
 
-    python -m astra.tools.mcp_serve crm
-    python -m astra.tools.mcp_serve tracker --seed 3
+    python3 -m astra.tools.mcp_serve crm
+    python3 -m astra.tools.mcp_serve tracker --seed 3
 """
 from __future__ import annotations
 
@@ -33,7 +33,8 @@ def serve(server: InProcessServer) -> None:
                           "capabilities": {"tools": {}},
                           "serverInfo": {"name": server.name, "version": "0.1.0"}}
             elif method == "tools/list":
-                result = {"tools": [{"name": t.name, "description": t.description, "inputSchema": t.input_schema}
+                result = {"tools": [{"name": t.name, "description": t.description, "inputSchema": t.input_schema,
+                                     **({"annotations": t.annotations} if t.annotations else {})}
                                     for t in server.list_tools()]}
             elif method == "tools/call":
                 try:
