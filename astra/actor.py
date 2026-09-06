@@ -114,6 +114,7 @@ class Actor:
                     {"role": "user", "content": user}]
         messages = [{k: v for k, v in m.items() if k != "system_hidden"} for m in messages]
 
+        malformed = 0
         for idx in range(1, budget.max_steps + 1):
             res = self.llm.chat(budget.model, messages, max_tokens=budget.max_tokens_reply)
             trace.llm_cost_usd += res.cost_usd
@@ -137,12 +138,17 @@ class Actor:
             tool = reply.get("tool")
             args = reply.get("args") or {}
             if not tool:
+                malformed += 1
                 obs = ("Your reply had no 'tool' and no 'final'. Reply with exactly one JSON object of the allowed forms."
                        if reply.get("parse_error") else "Missing 'tool'. Choose a tool or give 'final'.")
                 trace.steps.append(Step(idx, thought, None, None, obs, False, res.latency_s, res.model, res.cost_usd,
                                         res.prompt_tokens + res.completion_tokens))
                 messages.append({"role": "user", "content": obs})
+                if malformed >= 2:
+                    trace.stop_reason = "malformed_replies"
+                    break
                 continue
+            malformed = 0
             if not isinstance(args, dict):
                 args = {}
             rec = self.gateway.call(tool, args)
@@ -156,9 +162,10 @@ class Actor:
             messages.append({"role": "user", "content": f"OBSERVATION from {tool}:\n{obs}"})
         else:
             trace.stop_reason = "step_budget_exhausted"
-            # One last chance to answer from what it has.
-            messages.append({"role": "user", "content": "Step budget exhausted. Return your best 'final' now."})
-            res = self.llm.chat(budget.model, messages, max_tokens=budget.max_tokens_reply)
+        if not trace.finished:
+            # One last chance to answer from what it has, with a generous token cap.
+            messages.append({"role": "user", "content": "Stop calling tools. Return your best 'final' now as one JSON object."})
+            res = self.llm.chat(budget.model, messages, max_tokens=max(budget.max_tokens_reply, 8000))
             trace.llm_cost_usd += res.cost_usd
             trace.llm_latency_s += res.latency_s
             trace.tokens += res.prompt_tokens + res.completion_tokens

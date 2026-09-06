@@ -60,8 +60,10 @@ class Reflector:
             f"FINAL ANSWER: {json.dumps(trace.final, default=str)[:1500]}"
         )
         res = self.llm.chat(model, [{"role": "system", "content": REFLECT_SYSTEM}, {"role": "user", "content": user}],
-                            max_tokens=1400)
+                            max_tokens=6000)
         out = parse_json(res.text)
+        if out.get("parse_error"):
+            out["_raw"] = res.text[:2000]
         written = {"facts_new": 0, "conventions_new": 0, "skill": None, "prompt_patch": False, "facts_demoted": 0,
                    "cost_usd": res.cost_usd, "latency_s": res.latency_s, "model": model,
                    "tokens": res.prompt_tokens + res.completion_tokens}
@@ -102,4 +104,7 @@ class Reflector:
             "what_went_wrong": str(out.get("what_went_wrong", ""))[:300], "mode": trace.budget.get("mode"),
         })
         written["what_went_wrong"] = str(out.get("what_went_wrong", ""))[:300]
+        if out.get("parse_error"):
+            written["parse_error"] = True
+            written["raw"] = out.get("_raw", "")
         return written

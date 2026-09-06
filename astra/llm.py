@@ -87,7 +87,7 @@ class LLM:
         self.timeout = timeout
 
     def chat(self, model: str, messages: list[dict], temperature: float = 0.2, json_mode: bool = True,
-             max_tokens: int = 1200) -> LLMResult:
+             max_tokens: int = 4000) -> LLMResult:
         body = {
             "model": model,
             "messages": messages,
@@ -117,8 +117,21 @@ class LLM:
                 return self.chat(model, messages, temperature, json_mode=False, max_tokens=max_tokens)
             raise RuntimeError(f"LLM HTTP {e.code}: {detail}") from e
         latency = time.perf_counter() - t0
-        text = payload["choices"][0]["message"].get("content") or ""
+        choice = payload["choices"][0]
+        text = choice["message"].get("content") or ""
         usage = payload.get("usage") or {}
+        if choice.get("finish_reason") == "length" and max_tokens < 24000:
+            # Reasoning models spend hidden thinking tokens inside max_tokens; a truncated JSON reply is useless.
+            # Retry once with a much larger cap and account for both attempts.
+            retry = self.chat(model, messages, temperature, json_mode, max_tokens=max_tokens * 3)
+            pt = int(usage.get("prompt_tokens") or 0)
+            ct = int(usage.get("total_tokens") or 0) - pt
+            pin, pout = price_for(model)
+            retry.cost_usd += (pt * pin + max(ct, 0) * pout) / 1_000_000
+            retry.latency_s += latency
+            retry.prompt_tokens += pt
+            retry.completion_tokens += max(ct, 0)
+            return retry
         pt = int(usage.get("prompt_tokens") or sum(estimate_tokens(m.get("content", "")) for m in messages))
         ct = int(usage.get("completion_tokens") or estimate_tokens(text))
         if usage.get("total_tokens"):
