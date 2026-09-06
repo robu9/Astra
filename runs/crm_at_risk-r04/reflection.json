@@ -1,6 +1,6 @@
 {
- "facts_new": 2,
- "conventions_new": 1,
+ "facts_new": 1,
+ "conventions_new": 0,
  "skill": {
   "name": "At-Risk Pipeline Report",
   "status": "promoted",
@@ -8,9 +8,9 @@
  },
  "prompt_patch": true,
  "facts_demoted": 1,
- "cost_usd": 0.0055393000000000005,
- "latency_s": 8.926317400007974,
+ "cost_usd": 0.0047163000000000005,
+ "latency_s": 7.493118099984713,
  "model": "gemini-2.5-flash",
- "tokens": 5895,
- "what_went_wrong": "The actor incorrectly identified deal 'd_0412' as at-risk by hallucinating a note about a security questionnaire without calling crm.get_notes for that deal."
+ "tokens": 4435,
+ "what_went_wrong": "The agent only identified deals with 'health: R' as at-risk, missing other criteria for 'at risk' status, likely found in `crm.get_notes`."
 }

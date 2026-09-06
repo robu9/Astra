@@ -1,22 +1,22 @@
 [
   {
     "name": "At-Risk Pipeline Report",
-    "when": "Produce a report of at-risk deals from the CRM.",
+    "when": "Produce a report of at-risk deals from the CRM, including owner and reason.",
     "steps": [
-      "Call crm.list_owners({}) to get all owner names and IDs, noting their 'active' status.",
-      "Call crm.list_deals({}) to retrieve all deals, following 'next_cursor' until null.",
-      "Filter deals to include only 'OPEN' stages (e.g., 'proposal', 'qualified', 'negotiation').",
-      "For each OPEN deal, check if its 'health' is 'R'. If so, mark as at-risk with reason 'Health is Red'.",
-      "For each OPEN deal not marked at-risk by health, call crm.get_notes({'deal_id': <deal_id>}) to check for specific risk indicators in the notes.",
-      "Identify deals as at-risk if their notes contain phrases like 'PO pending' or 'budget freeze', extracting the specific phrase as the reason.",
-      "For each OPEN deal not yet marked at-risk, call crm.get_deal({'deal_id': <deal_id>}) to check for additional risk indicators.",
-      "For each identified at-risk deal, resolve the 'owner' ID to a name using the list from crm.list_owners. If the owner ID is missing or the owner is inactive, set the owner to 'UNASSIGNED'."
+      "Call `crm.list_deals` for each known valid 'OPEN' stage (e.g., 'qualified', 'negotiation') to gather all open deals, following `next_cursor` until null.",
+      "Iterate through all collected deals.",
+      "For each deal, call `crm.get_deal` to retrieve its full details.",
+      "For each deal, call `crm.get_notes` to retrieve all associated notes.",
+      "If a deal has an `owner` ID, call `crm.get_owner` with the `owner_id` to get the owner's name and check if the owner is active.",
+      "Determine if a deal is 'at risk' based on `health` status, relevant information found in `crm.get_notes`, or if the owner is inactive.",
+      "If a deal is identified as 'at risk' and has no valid owner (null owner ID or inactive owner), assign 'UNASSIGNED' as the owner, otherwise use the retrieved owner name.",
+      "Compile the report with deal ID, owner name, and the reason(s) for being at risk."
     ],
     "tools": [
-      "crm.list_owners",
       "crm.list_deals",
+      "crm.get_deal",
       "crm.get_notes",
-      "crm.get_deal"
+      "crm.get_owner"
     ],
     "servers": [
       "crm"
@@ -25,107 +25,41 @@
     "status": "promoted",
     "proposed_run": "crm_at_risk-r05",
     "version": 3,
-    "wins": 1,
+    "wins": 0,
     "uses": 2,
     "promoted_run": "crm_at_risk-r04"
   },
   {
-    "name": "Triage Issues",
-    "when": "task involves triaging issues by applying labels and assigning owners",
-    "steps": [
-      "Call tracker.list_issues with status='open' and follow 'next_cursor' until all open issues are retrieved.",
-      "Call tracker.list_labels to understand available priority labels and their descriptions.",
-      "Call tracker.list_members to understand team members and their ownership areas.",
-      "For each issue:",
-      "  Extract the module from the issue title (e.g., '[module]').",
-      "  Determine the priority label based on keywords in the title and label descriptions (e.g., 'Production outage' -> 'sev-1', '500 on save' -> 'sev-2', 'Typo' or 'Minor alignment' -> 'sev-3').",
-      "  Find the member whose 'owns' list includes the extracted module.",
-      "  Call tracker.add_label with the issue_id and determined label.",
-      "  Call tracker.assign_issue with the issue_id and the determined member_id.",
-      "Report the list of triaged issues with their new labels and assignees."
-    ],
-    "tools": [
-      "tracker.list_issues",
-      "tracker.list_labels",
-      "tracker.list_members",
-      "tracker.add_label",
-      "tracker.assign_issue"
-    ],
-    "servers": [
-      "tracker"
-    ],
-    "family": "tracker_triage",
-    "status": "rejected",
-    "proposed_run": "tracker_triage-r01",
-    "version": 1,
-    "wins": 0,
-    "uses": 0,
-    "rejected_run": "tracker_triage-r02",
-    "reason": "quality fell 0.56 -> 0.49"
-  },
-  {
     "name": "Triage Open Issues",
-    "when": "Triage all open issues by applying priority labels and assigning owners based on title content and module ownership.",
+    "when": "Triage all open issues by applying priority labels and assigning owners.",
     "steps": [
-      "Call `tracker.list_issues` with `status='open'` and iterate through all pages using `next_cursor` to get all open issues.",
-      "Call `tracker.list_members` to get the mapping of module ownership to member IDs.",
-      "Call `tracker.list_labels` to understand the meaning of priority labels (sev-1, sev-2, sev-3).",
-      "For each issue:",
-      "  Extract the module name from the issue title (e.g., '[module]').",
-      "  Determine the assignee by matching the module name to a member's owned modules from `tracker.list_members`.",
-      "  Determine the priority label based on keywords in the issue title, applying specific rules first (e.g., 'Production outage' -> sev-1, 'sync is broken' -> sev-2, '500 on save' -> sev-2, 'Minor alignment issue' -> sev-3).",
-      "  Call `tracker.add_label` with the determined label and `issue_id`.",
-      "  Call `tracker.assign_issue` with the determined `member_id` and `issue_id`."
+      "Call `tracker.list_issues` with `status: 'open'` and iterate through all pages using the `cursor` until `next_cursor` is null to get all open issues.",
+      "Call `tracker.list_members` to get all members and their owned modules.",
+      "Call `tracker.list_labels` to understand available labels and their descriptions.",
+      "For each issue, extract the module name from the title (e.g., '[module]').",
+      "Determine the assignee by matching the module name to a member's 'owns' field. If the module is 'billing', 'exports', 'mobile', 'auth', or 'search', check `tracker.get_issue` and `tracker.list_comments` for additional context before assigning.",
+      "Determine the priority label based on keywords in the title: 'Production outage' or 'service down' for 'sev-1'; 'returns 500' for 'sev-2' (unless module is 'auth', then check context); 'Typo', 'Minor alignment issue', or 'Improve empty-state copy' for 'sev-3'. If the title contains 'Data loss' or 'sync is broken' and the module is 'exports', or if 'Export to CSV fails' (especially for 'search' module), or if no keyword matches, check `tracker.get_issue` and `tracker.list_comments` for more information before deciding on a label. If comments indicate 'duplicate', apply 'duplicate' label and do not assign.",
+      "Call `tracker.add_label` with the determined `issue_id` and `label`.",
+      "If an assignee is determined, call `tracker.assign_issue` with the determined `issue_id` and `member_id`."
     ],
     "tools": [
       "tracker.list_issues",
       "tracker.list_members",
       "tracker.list_labels",
+      "tracker.assign_issue",
       "tracker.add_label",
-      "tracker.assign_issue"
+      "tracker.get_issue",
+      "tracker.list_comments"
     ],
     "servers": [
       "tracker"
     ],
     "family": "tracker_triage",
-    "status": "rejected",
-    "proposed_run": "tracker_triage-r03",
-    "version": 1,
-    "wins": 0,
-    "uses": 0,
-    "rejected_run": "tracker_triage-r04",
-    "reason": "quality fell 0.56 -> 0.49"
-  },
-  {
-    "name": "Triage Open Issues",
-    "when": "The task involves triaging open issues by applying priority labels and assigning owners based on conventions.",
-    "steps": [
-      "Call `tracker.list_issues` with `status='open'` and follow `next_cursor` until all open issues are retrieved.",
-      "Call `tracker.list_labels` to understand available priority labels and their descriptions.",
-      "Call `tracker.list_members` to understand module ownership.",
-      "For each issue:",
-      "  Extract the module from the issue title (e.g., '[module]').",
-      "  Determine the priority label based on keywords in the title, using the most specific rule first.",
-      "  Determine the assignee based on the module owner from `tracker.list_members`.",
-      "  Call `tracker.add_label` with the determined label.",
-      "  Call `tracker.assign_issue` with the determined member_id.",
-      "Report the list of triaged issues with their applied labels and assignees."
-    ],
-    "tools": [
-      "tracker.list_issues",
-      "tracker.list_labels",
-      "tracker.list_members",
-      "tracker.add_label",
-      "tracker.assign_issue"
-    ],
-    "servers": [
-      "tracker"
-    ],
-    "family": "tracker_triage",
-    "status": "candidate",
+    "status": "promoted",
     "proposed_run": "tracker_triage-r05",
-    "version": 1,
+    "version": 3,
     "wins": 0,
-    "uses": 0
+    "uses": 3,
+    "promoted_run": "tracker_triage-r03"
   }
 ]

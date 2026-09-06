@@ -1,5 +1,5 @@
 {
- "facts_new": 3,
+ "facts_new": 2,
  "conventions_new": 0,
  "skill": {
   "name": "At-Risk Pipeline Report",
@@ -8,9 +8,9 @@
  },
  "prompt_patch": true,
  "facts_demoted": 1,
- "cost_usd": 0.0059191,
- "latency_s": 9.86420189999626,
+ "cost_usd": 0.005507199999999999,
+ "latency_s": 7.672399200004293,
  "model": "gemini-2.5-flash",
- "tokens": 6281,
- "what_went_wrong": "The agent incorrectly identified one deal as at-risk, missed another, and failed to correctly assign owners for inactive users."
+ "tokens": 5964,
+ "what_went_wrong": "The actor missed one at-risk deal because it did not identify inactive owners as a risk factor, and the owner names were not consistently retrieved for all deals."
 }

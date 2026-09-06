@@ -32,12 +32,33 @@ class CallRecord:
     result: Any = field(default=None, repr=False)
 
 
-def _preview(value: Any, limit: int = 3500) -> str:
+NOISE_KEY_SUFFIXES = ("_url", "url", "node_id", "gravatar_id", "_at_iso", "etag")
+
+
+def _compact(value: Any, depth: int = 0) -> Any:
+    """Drop the boilerplate real APIs return (nulls, hyperlink fields, opaque ids, huge strings) so the model sees data."""
+    if isinstance(value, dict):
+        out = {}
+        for k, v in value.items():
+            if v is None or v == [] or v == {}:
+                continue
+            if isinstance(k, str) and k.lower().endswith(NOISE_KEY_SUFFIXES) and k.lower() not in ("next_cursor", "cursor"):
+                continue
+            out[k] = _compact(v, depth + 1)
+        return out
+    if isinstance(value, list):
+        return [_compact(v, depth + 1) for v in value]
+    if isinstance(value, str) and len(value) > 600:
+        return value[:600] + f"...(+{len(value) - 600} chars)"
+    return value
+
+
+def _preview(value: Any, limit: int = 4500) -> str:
     try:
-        s = json.dumps(value, default=str)
+        s = json.dumps(_compact(value), default=str, ensure_ascii=False)
     except Exception:
         s = str(value)
-    return s if len(s) <= limit else s[:limit] + f"... (+{len(s) - limit} chars)"
+    return s if len(s) <= limit else s[:limit] + f"... (+{len(s) - limit} chars; narrow the query or page size)"
 
 
 def _shape(value: Any) -> str:

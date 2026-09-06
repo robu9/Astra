@@ -1,12 +1,12 @@
 {
- "facts_new": 4,
- "conventions_new": 1,
+ "facts_new": 3,
+ "conventions_new": 2,
  "skill": null,
  "prompt_patch": true,
  "facts_demoted": 0,
- "cost_usd": 0.0050755,
- "latency_s": 9.213491100003012,
+ "cost_usd": 0.0047261000000000004,
+ "latency_s": 8.445026700006565,
  "model": "gemini-2.5-flash",
- "tokens": 3799,
- "what_went_wrong": "The agent failed to identify all at-risk deals and did not resolve owner IDs to names."
+ "tokens": 3749,
+ "what_went_wrong": "The agent used an invalid stage name 'OPEN' and failed to correctly identify 'at-risk' deals based on the 'health' field and 'OPEN' stages."
 }

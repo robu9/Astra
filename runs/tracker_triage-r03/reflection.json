@@ -1,16 +1,14 @@
 {
- "facts_new": 3,
+ "facts_new": 0,
  "conventions_new": 0,
- "skill": {
-  "name": "Triage Open Issues",
-  "status": "candidate",
-  "version": 1
- },
- "prompt_patch": true,
- "facts_demoted": 1,
- "cost_usd": 0.0057003999999999996,
- "latency_s": 10.485273900005268,
+ "skill": null,
+ "prompt_patch": false,
+ "facts_demoted": 0,
+ "cost_usd": 0.0058958000000000005,
+ "latency_s": 9.149279300007038,
  "model": "gemini-2.5-flash",
- "tokens": 5156,
- "what_went_wrong": "The agent failed to triage one issue (#307) and incorrectly assigned labels or owners for several others, indicating issues with priority rules and possibly module-to-owner mapping."
+ "tokens": 6042,
+ "what_went_wrong": "",
+ "parse_error": true,
+ "raw": "{\n  \"what_went_wrong\": \"The actor failed to identify and correctly handle duplicate issues, and mislabeled/misassigned issues #305 and #308 despite checking for additional context.\",\n  \"facts\": [\n    {\n      \"fact\": \"If an issue's comments indicate it is a 'duplicate of #<id>', it should be labeled 'duplicate' and not assigned a priority label or an assignee.\",\n      \"server\": \"tracker\",\n      \"source_tool\": \"tracker.list_comments\",\n      \"evidence\": \"comments\": [{\"author\": \"eng\", \"text\": \"duplicate of #4\"}], \"labels\": [{\"name\": \"duplicate\", \"description\": \"Closed as duplicate of an existing issue. Do not assign.\"}]\",\n      \"confidence\": 1.0\n    },\n    {\n      \"fact\": \"Issues with 'Typo' in the title, even for 'mobile' module, are not always 'sev-3' or assigned to the module owner, suggesting other factors or tools are needed for final determination.\",\n      \"server\": \"tracker\",\n      \"source_tool\": null,\n      \"evidence\": \"incorrect: #305 labels=['sev-3'], #305 assignee=m_04, #308 labels=['sev-3'], #308 assignee=m_04\",\n      \"confidence\": 0.8\n    }\n  ],\n  \"tool_conventions\": [],\n  \"skill\": {\n    \"name\": \"Triage Open Issues\",\n    \"when\": \"Triage all open issues by applying priority labels and assigning owners.\",\n    \"steps\": [\n      \"Call `tracker.list_issues` with `status: 'open'` and iterate through all pages using the `cursor` until `next_cursor` is null to get all open issues.\",\n      \"Call `tracker.list_members` to get all members and their owned modules.\",\n      \"Call `tracker.list_labels` to understand available labels and their descriptions.\",\n      \"For each issue, extract the module name from the title (e.g., '[module]').\",\n      \"Call `tracker.get_issue` and `tracker.list_comments` for each issue to gather full context.\",\n      \"If comments indicate 'duplicate of #<id>', add the 'duplicate' label and do not assign an owner or priority label.\",\n      \"Determine the assignee by matching the module name to a member's 'owns' field. If the module is 'billing' "
 }

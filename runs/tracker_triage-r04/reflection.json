@@ -1,12 +1,16 @@
 {
- "facts_new": 2,
+ "facts_new": 4,
  "conventions_new": 0,
- "skill": null,
+ "skill": {
+  "name": "Triage Open Issues",
+  "status": "promoted",
+  "version": 2
+ },
  "prompt_patch": true,
- "facts_demoted": 0,
- "cost_usd": 0.0054616000000000005,
- "latency_s": 9.019841899978928,
+ "facts_demoted": 1,
+ "cost_usd": 0.0062547,
+ "latency_s": 9.832510300009744,
  "model": "gemini-2.5-flash",
- "tokens": 5130,
- "what_went_wrong": "The agent failed to correctly apply priority labels to some issues and missed a specific rule for 'All users cannot log in' issues."
+ "tokens": 6329,
+ "what_went_wrong": "The actor failed to process issue #409, and incorrectly applied labels and assignees for issues #401 and #406, indicating a need for more nuanced rules for 'exports' module issues and 'sync is broken' titles."
 }

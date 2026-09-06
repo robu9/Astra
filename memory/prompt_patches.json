@@ -1,70 +1,64 @@
 {
   "crm_at_risk@crm": {
-    "active": "When resolving owners, only consider active owners; if an owner is inactive or missing, assign 'UNASSIGNED'.\nDo not consider 'security questionnaire' in notes as a standalone risk indicator.\nAlways call crm.get_deal for deals not identified as at-risk by health or notes, as it may contain other risk signals.",
+    "active": "When determining 'at risk' status, consider deals with `health: 'R'`, deals with notes indicating risk (e.g., 'budget freeze'), AND deals whose owner is inactive (check `crm.get_owner` for `active: false`). If an owner is inactive, the deal is 'UNASSIGNED'. Ensure `crm.get_owner` is called for every deal with an owner ID to get the name and check activity status.",
     "candidate": {
-      "text": "When resolving owners, only consider active owners; if an owner is inactive or missing, assign 'UNASSIGNED'.\nDo not consider 'security questionnaire' in notes as a standalone risk indicator.\nAlways call crm.get_deal for deals not identified as at-risk by health or notes, as it may contain other risk signals.",
+      "text": "When determining 'at risk' status, consider deals with `health: 'R'`, deals with notes indicating risk (e.g., 'budget freeze'), AND deals whose owner is inactive (check `crm.get_owner` for `active: false`). If an owner is inactive, the deal is 'UNASSIGNED'. Ensure `crm.get_owner` is called for every deal with an owner ID to get the name and check activity status.",
       "run": "crm_at_risk-r05"
     },
     "history": [
       {
-        "text": "To identify at-risk deals, first check the 'health' field for 'R'. If not 'R', inspect 'crm.get_deal' and 'crm.get_notes' for further risk indicators. Remember to resolve owner IDs to names using 'crm.list_owners' and handle unassigned owners.",
+        "text": "To find 'OPEN' deals, filter for stages like 'qualified' or 'negotiation'. 'At-risk' deals are those with `health: 'R'`. Remember to call `crm.get_owner` for each deal's owner_id.",
         "run": "crm_at_risk-r01",
         "kept": true,
         "resolved_run": "crm_at_risk-r02"
       },
       {
-        "text": "To identify at-risk deals, first check the 'health' field for 'R'. If not 'R', ALWAYS inspect 'crm.get_deal' and 'crm.get_notes' for further risk indicators, as 'G' health deals can also be at-risk. Remember to resolve owner IDs to names using 'crm.list_owners' and handle unassigned owners.",
+        "text": "To find all 'OPEN' deals, call `crm.list_deals` for *all* relevant stages like 'qualified', 'negotiation', 'prospecting', and 'proposal'. For each deal, call `crm.get_deal` to confirm its 'at risk' status and `crm.get_owner` to get the owner's name. The `health: 'R'` rule might be insufficient; check `crm.get_deal` for more details.",
         "run": "crm_at_risk-r02",
         "kept": true,
         "resolved_run": "crm_at_risk-r03"
       },
       {
-        "text": "When listing deals, ensure all relevant 'OPEN' stages are covered, not just 'qualified' and 'negotiation'.\nWhen inspecting notes, specifically look for 'security questionnaire' as an indicator of risk.\nRemember to resolve owner IDs to names and handle unassigned owners.",
+        "text": "The `health: 'R'` rule is insufficient for identifying all at-risk deals. For each deal, you MUST call `crm.get_deal` to determine its full 'at risk' status. If `crm.get_deal` does not provide a clear reason, consider calling `crm.get_notes` for additional context. Only query `crm.list_deals` with known valid stages like 'qualified' and 'negotiation'; 'prospecting' is not a valid stage.",
         "run": "crm_at_risk-r03",
         "kept": true,
         "resolved_run": "crm_at_risk-r04"
       },
       {
-        "text": "Always call crm.get_notes for each deal to verify risk indicators in notes; do not infer their presence.\nWhen inspecting notes, specifically look for 'security questionnaire', 'PO pending', or 'budget freeze' as indicators of risk.\nEnsure all relevant 'OPEN' stages (proposal, qualified, negotiation) are covered when filtering deals.",
+        "text": "The `health: 'R'` rule is insufficient for identifying all at-risk deals. For each deal, you MUST call `crm.get_deal` AND `crm.get_notes` to determine its full 'at risk' status and the reason. Only query `crm.list_deals` with known valid stages like 'qualified' and 'negotiation'; 'prospecting' is not a valid stage.",
         "run": "crm_at_risk-r04",
-        "kept": false,
+        "kept": true,
         "resolved_run": "crm_at_risk-r05"
       }
     ],
-    "active_before_candidate": "When listing deals, ensure all relevant 'OPEN' stages are covered, not just 'qualified' and 'negotiation'.\nWhen inspecting notes, specifically look for 'security questionnaire' as an indicator of risk.\nRemember to resolve owner IDs to names and handle unassigned owners."
+    "active_before_candidate": "The `health: 'R'` rule is insufficient for identifying all at-risk deals. For each deal, you MUST call `crm.get_deal` AND `crm.get_notes` to determine its full 'at risk' status and the reason. Only query `crm.list_deals` with known valid stages like 'qualified' and 'negotiation'; 'prospecting' is not a valid stage."
   },
   "tracker_triage@tracker": {
-    "active": "When triaging issues, ensure to call `add_label` and `assign_issue` for *every* issue. Remember to handle pagination for `list_issues` by following the `next_cursor` until it is null to retrieve all open issues. Apply the most specific priority rule first. Pay close attention to 'Data loss' and 'All users cannot log in' as they indicate 'sev-1' priority. If a rule seems to apply but the grader indicates it's wrong, there might be a more specific, unstated rule or an exception. Always check the `owns` field in `list_members` for module ownership.",
+    "active": "When triaging issues, if the module is 'billing', 'exports', 'mobile', 'auth', or 'search', or if the title contains 'Data loss' or 'sync is broken' for the 'exports' module, or if 'Export to CSV fails' is in the title, or if no clear label rule applies, call `tracker.get_issue` and `tracker.list_comments` for the issue to gather more context before deciding on the assignee and labels. Do not assume 'Export to CSV fails' or 'sync is broken' implies 'sev-2' without further evidence. Ensure all issues from `list_issues` are processed and assigned a label.",
     "candidate": {
-      "text": "When triaging issues, ensure to call `add_label` and `assign_issue` for *every* issue. Remember to handle pagination for `list_issues` by following the `next_cursor` until it is null to retrieve all open issues. Apply the most specific priority rule first. Pay close attention to 'Data loss' and 'All users cannot log in' as they indicate 'sev-1' priority. If a rule seems to apply but the grader indicates it's wrong, there might be a more specific, unstated rule or an exception. Always check the `owns` field in `list_members` for module ownership.",
+      "text": "When triaging issues, if the module is 'billing', 'exports', 'mobile', 'auth', or 'search', or if the title contains 'Data loss' or 'sync is broken' for the 'exports' module, or if 'Export to CSV fails' is in the title, or if no clear label rule applies, call `tracker.get_issue` and `tracker.list_comments` for the issue to gather more context before deciding on the assignee and labels. Do not assume 'Export to CSV fails' or 'sync is broken' implies 'sev-2' without further evidence. Ensure all issues from `list_issues` are processed and assigned a label.",
       "run": "tracker_triage-r05"
     },
     "history": [
       {
-        "text": "When triaging issues, carefully extract the module from the title (e.g., '[module]') to determine the assignee. Use keywords in the issue title (e.g., 'Production outage', '500 on save', 'Typo', 'Minor alignment') to determine the correct severity label based on the descriptions from tracker.list_labels. Ensure all open issues are retrieved by following pagination.",
+        "text": "After determining the correct labels and assignees, remember to call `tracker.add_label` and `tracker.assign_issue` for each issue. Do not just report the plan; execute it.",
         "run": "tracker_triage-r01",
-        "kept": false,
+        "kept": true,
         "resolved_run": "tracker_triage-r02"
       },
       {
-        "text": "When triaging issues, ensure to call `add_label` and `assign_issue` for *every* issue. Remember to handle pagination for `list_issues` by following the `next_cursor` until it is null to retrieve all open issues. Apply the most specific priority rule first.",
+        "text": "When triaging issues, if the module is 'billing' or 'mobile', or if no clear label rule applies, call `tracker.get_issue` and `tracker.list_comments` for the issue to gather more context before deciding on the assignee and labels. Do not assume 'Export to CSV fails' or 'sync is broken' implies 'sev-2' without further evidence.",
         "run": "tracker_triage-r02",
         "kept": true,
         "resolved_run": "tracker_triage-r03"
       },
       {
-        "text": "Ensure to process *every* issue retrieved from `list_issues`, including those from subsequent pages. Re-evaluate the priority rule for 'Typo' issues, as 'sev-3' was incorrect for some. Always apply the most specific priority rule first.",
-        "run": "tracker_triage-r03",
-        "kept": false,
-        "resolved_run": "tracker_triage-r04"
-      },
-      {
-        "text": "When triaging issues, ensure to call `add_label` and `assign_issue` for *every* issue. Remember to handle pagination for `list_issues` by following the `next_cursor` until it is null to retrieve all open issues. Apply the most specific priority rule first. Pay close attention to 'Data loss' and 'All users cannot log in' as they indicate 'sev-1' priority.",
+        "text": "When triaging issues, if the module is 'billing', 'exports', or 'mobile', or if the title contains 'Data loss' or 'sync is broken' for the 'exports' module, or if no clear label rule applies, call `tracker.get_issue` and `tracker.list_comments` for the issue to gather more context before deciding on the assignee and labels. Do not assume 'Export to CSV fails' or 'sync is broken' implies 'sev-2' without further evidence. Ensure all issues from `list_issues` are processed.",
         "run": "tracker_triage-r04",
         "kept": true,
         "resolved_run": "tracker_triage-r05"
       }
     ],
-    "active_before_candidate": "When triaging issues, ensure to call `add_label` and `assign_issue` for *every* issue. Remember to handle pagination for `list_issues` by following the `next_cursor` until it is null to retrieve all open issues. Apply the most specific priority rule first. Pay close attention to 'Data loss' and 'All users cannot log in' as they indicate 'sev-1' priority."
+    "active_before_candidate": "When triaging issues, if the module is 'billing', 'exports', or 'mobile', or if the title contains 'Data loss' or 'sync is broken' for the 'exports' module, or if no clear label rule applies, call `tracker.get_issue` and `tracker.list_comments` for the issue to gather more context before deciding on the assignee and labels. Do not assume 'Export to CSV fails' or 'sync is broken' implies 'sev-2' without further evidence. Ensure all issues from `list_issues` are processed."
   }
 }
