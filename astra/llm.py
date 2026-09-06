@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+import ssl
 import time
 import urllib.error
 import urllib.request
@@ -85,6 +86,18 @@ class LLM:
         self.base_url = (base_url or os.environ.get("ASTRA_LLM_BASE_URL") or "https://api.openai.com/v1").rstrip("/")
         self.api_key = api_key or os.environ.get("ASTRA_LLM_API_KEY") or os.environ.get("OPENAI_API_KEY") or "lm-studio"
         self.timeout = timeout
+        ca_bundle = os.environ.get("ASTRA_CA_BUNDLE") or os.environ.get("SSL_CERT_FILE")
+        if not ca_bundle:
+            default_ca = ssl.get_default_verify_paths().cafile
+            if default_ca and Path(default_ca).exists():
+                ca_bundle = default_ca
+            else:
+                try:
+                    import certifi  # optional fallback when Python has no configured CA store
+                    ca_bundle = certifi.where()
+                except ImportError:
+                    ca_bundle = None
+        self.ssl_context = ssl.create_default_context(cafile=ca_bundle)
 
     def chat(self, model: str, messages: list[dict], temperature: float = 0.2, json_mode: bool = True,
              max_tokens: int = 4000, _attempt: int = 0) -> LLMResult:
@@ -108,7 +121,7 @@ class LLM:
         )
         t0 = time.perf_counter()
         try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+            with urllib.request.urlopen(req, timeout=self.timeout, context=self.ssl_context) as resp:
                 payload = json.loads(resp.read().decode("utf-8"))
         except urllib.error.HTTPError as e:
             detail = e.read().decode("utf-8", errors="replace")[:500]
