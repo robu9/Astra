@@ -1,0 +1,169 @@
+"""Actor: does the task using tools + retrieved memory. No app-specific logic lives here."""
+from __future__ import annotations
+
+import json
+import time
+from dataclasses import dataclass, field
+
+from astra.controller import Budget
+from astra.gateway import ToolGateway
+from astra.llm import parse_json
+from astra.memory import Memory
+
+SYSTEM = """You are Astra, a careful tool-using agent. You complete a task by calling tools, then return a final answer.
+
+Reply with ONE JSON object per turn, nothing else. Two forms:
+  {"thought": "<short reasoning>", "tool": "<server.tool>", "args": {...}}
+  {"thought": "<short reasoning>", "final": <answer matching the ANSWER SCHEMA>}
+
+Rules
+- Use only the tools listed. Argument names must match the schema exactly.
+- Prefer the LEARNED notes, FACTS and SKILL below over guessing; they came from your own earlier runs on these tools.
+- Do not re-probe tools whose behaviour you already know. Do not repeat identical calls.
+- When a tool errors, read the error and fix the call; do not loop.
+- Finish as soon as you have enough evidence. Fewer calls is better.
+"""
+
+
+@dataclass
+class Step:
+    idx: int
+    thought: str
+    tool: str | None
+    args: dict | None
+    observation: str | None
+    ok: bool
+    latency_s: float
+    model: str
+    cost_usd: float
+    tokens: int
+
+
+@dataclass
+class RunTrace:
+    run_id: str
+    task: str
+    steps: list[Step] = field(default_factory=list)
+    final: object = None
+    finished: bool = False
+    stop_reason: str = ""
+    llm_cost_usd: float = 0.0
+    llm_latency_s: float = 0.0
+    tokens: int = 0
+    memory_used: dict = field(default_factory=dict)
+    budget: dict = field(default_factory=dict)
+
+    def to_dict(self) -> dict:
+        return {
+            "run_id": self.run_id, "task": self.task, "finished": self.finished, "stop_reason": self.stop_reason,
+            "final": self.final, "llm_cost_usd": round(self.llm_cost_usd, 6), "llm_latency_s": round(self.llm_latency_s, 3),
+            "tokens": self.tokens, "budget": self.budget, "memory_used": self.memory_used,
+            "steps": [s.__dict__ for s in self.steps],
+        }
+
+    def compact(self, limit_obs: int = 300) -> str:
+        lines = []
+        for s in self.steps:
+            if s.tool:
+                obs = (s.observation or "")[:limit_obs]
+                lines.append(f"[{s.idx}] {s.tool}({json.dumps(s.args, default=str)}) -> {'OK' if s.ok else 'ERROR'}: {obs}")
+            else:
+                lines.append(f"[{s.idx}] FINAL: {json.dumps(s.args or self.final, default=str)[:limit_obs]}")
+        return "\n".join(lines)
+
+
+def _memory_block(mem: dict) -> str:
+    out = []
+    if mem.get("prompt_patch"):
+        out.append("SELF-INSTRUCTIONS (from your reflection on earlier runs):\n" + mem["prompt_patch"])
+    if mem.get("skills"):
+        s = mem["skills"][0]
+        out.append(f"SKILL '{s['name']}' (status: {s['status']}, v{s.get('version', 1)}) - when: {s['when']}\n  steps:\n  - "
+                   + "\n  - ".join(s["steps"]) + f"\n  tools: {', '.join(s['tools'])}")
+    if mem.get("facts"):
+        out.append("FACTS learned from these tools' data:\n" + "\n".join(
+            f"- ({f['confidence']:.1f}) {f['fact']}" for f in mem["facts"]))
+    if mem.get("episodes"):
+        eps = mem["episodes"]
+        out.append("RECENT RUNS on this task:\n" + "\n".join(
+            f"- run {e['run_id']}: quality={e.get('quality', 0):.2f}, calls={e.get('tool_calls')}, issue: {e.get('what_went_wrong') or 'none'}"
+            for e in eps))
+    return "\n\n".join(out) if out else "(no memory yet - this is the first time you see this task on these tools)"
+
+
+class Actor:
+    def __init__(self, llm, gateway: ToolGateway, memory: Memory):
+        self.llm = llm
+        self.gateway = gateway
+        self.memory = memory
+
+    def run(self, run_id: str, task: str, family: str, answer_schema: dict, budget: Budget,
+            on_step=None) -> RunTrace:
+        servers = self.gateway.attached()
+        mem = self.memory.retrieve(task, family, servers)
+        trace = RunTrace(run_id=run_id, task=task, budget=budget.__dict__.copy())
+        trace.memory_used = {"facts": len(mem["facts"]), "skills": len(mem["skills"]),
+                             "episodes": len(mem["episodes"]), "prompt_patch": bool(mem["prompt_patch"])}
+        self.gateway.new_run()
+
+        system = SYSTEM + f"\nMODE: {budget.mode} ({budget.reason}). Step budget: {budget.max_steps}.\n"
+        user = (f"TASK:\n{task}\n\nANSWER SCHEMA (return exactly this shape in 'final'):\n"
+                f"{json.dumps(answer_schema, indent=1)}\n\nTOOLS:\n{self.gateway.tool_prompt()}\n\n"
+                f"MEMORY:\n{_memory_block(mem)}")
+        messages = [{"system_hidden": True, "role": "system", "content": system},
+                    {"role": "user", "content": user}]
+        messages = [{k: v for k, v in m.items() if k != "system_hidden"} for m in messages]
+
+        for idx in range(1, budget.max_steps + 1):
+            res = self.llm.chat(budget.model, messages, max_tokens=budget.max_tokens_reply)
+            trace.llm_cost_usd += res.cost_usd
+            trace.llm_latency_s += res.latency_s
+            trace.tokens += res.prompt_tokens + res.completion_tokens
+            reply = parse_json(res.text)
+            thought = str(reply.get("thought", ""))[:400]
+            messages.append({"role": "assistant", "content": res.text if len(res.text) < 4000 else json.dumps(reply)})
+
+            if "final" in reply and reply["final"] is not None:
+                trace.final = reply["final"]
+                trace.finished = True
+                trace.stop_reason = "final"
+                trace.steps.append(Step(idx, thought, None, reply["final"] if isinstance(reply["final"], dict) else {"value": reply["final"]},
+                                        None, True, res.latency_s, res.model, res.cost_usd,
+                                        res.prompt_tokens + res.completion_tokens))
+                if on_step:
+                    on_step(trace.steps[-1])
+                break
+
+            tool = reply.get("tool")
+            args = reply.get("args") or {}
+            if not tool:
+                obs = ("Your reply had no 'tool' and no 'final'. Reply with exactly one JSON object of the allowed forms."
+                       if reply.get("parse_error") else "Missing 'tool'. Choose a tool or give 'final'.")
+                trace.steps.append(Step(idx, thought, None, None, obs, False, res.latency_s, res.model, res.cost_usd,
+                                        res.prompt_tokens + res.completion_tokens))
+                messages.append({"role": "user", "content": obs})
+                continue
+            if not isinstance(args, dict):
+                args = {}
+            rec = self.gateway.call(tool, args)
+            obs = rec.result_preview if rec.ok else f"ERROR: {rec.error}"
+            if trace.llm_cost_usd > budget.max_cost_usd:
+                obs += "\n(cost budget nearly exhausted: give your best 'final' answer now)"
+            trace.steps.append(Step(idx, thought, tool, args, obs, rec.ok, res.latency_s + rec.latency_s, res.model,
+                                    res.cost_usd, res.prompt_tokens + res.completion_tokens))
+            if on_step:
+                on_step(trace.steps[-1])
+            messages.append({"role": "user", "content": f"OBSERVATION from {tool}:\n{obs}"})
+        else:
+            trace.stop_reason = "step_budget_exhausted"
+            # One last chance to answer from what it has.
+            messages.append({"role": "user", "content": "Step budget exhausted. Return your best 'final' now."})
+            res = self.llm.chat(budget.model, messages, max_tokens=budget.max_tokens_reply)
+            trace.llm_cost_usd += res.cost_usd
+            trace.llm_latency_s += res.latency_s
+            trace.tokens += res.prompt_tokens + res.completion_tokens
+            reply = parse_json(res.text)
+            if reply.get("final") is not None:
+                trace.final = reply["final"]
+                trace.finished = True
+        return trace
