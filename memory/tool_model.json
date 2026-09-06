@@ -12,8 +12,8 @@
   },
   "crm.get_notes": {
     "description": "Get notes for a deal. Notes are free text written by sales reps.",
-    "calls": 7,
-    "ok": 7,
+    "calls": 9,
+    "ok": 9,
     "errors": 0,
     "latency_total": 0.0073,
     "error_signatures": {},
@@ -34,29 +34,32 @@
   },
   "crm.list_deals": {
     "description": "List deals. Paginated: pass the returned next_cursor to get the next page. Optional stage filter.",
-    "calls": 14,
-    "ok": 12,
+    "calls": 18,
+    "ok": 16,
     "errors": 2,
-    "latency_total": 0.0231,
+    "latency_total": 0.0233,
     "error_signatures": {
       "invalid stage '*'": 2
     },
     "conventions": [
       "The `stage` argument does not accept 'OPEN'. Possible open stages include 'qualified' and 'negotiation'.",
       "Pagination is handled via `next_cursor` in the response, which should be passed as the `cursor` argument in subsequent calls until `next_cursor` is null.",
-      "The `stage` argument does not accept 'prospecting'; known valid open stages include 'qualified' and 'negotiation'."
+      "The `stage` argument does not accept 'prospecting'; known valid open stages include 'qualified' and 'negotiation'.",
+      "paginated: keep calling with cursor=next_cursor until it is null; page size is small"
     ],
     "probed": true,
     "shape": "object keys=['items', 'next_cursor', 'total']; items[0] keys=['amount', 'company', 'currency', 'health', 'id', 'owner', 'stage']"
   },
   "crm.list_owners": {
     "description": "List deal owners (sales reps).",
-    "calls": 1,
-    "ok": 1,
+    "calls": 2,
+    "ok": 2,
     "errors": 0,
     "latency_total": 0.0017,
     "error_signatures": {},
-    "conventions": [],
+    "conventions": [
+      "owner on a deal is an id like u_03; map to name via list_owners"
+    ],
     "probed": true,
     "shape": "object keys=['owners']"
   },

@@ -1,32 +1,28 @@
 [
   {
-    "name": "At-Risk Pipeline Report",
-    "when": "Produce a report of at-risk deals from the CRM, including owner and reason.",
+    "name": "crm at-risk report",
+    "when": "weekly at-risk pipeline report from CRM",
     "steps": [
-      "Call `crm.list_deals` for each known valid 'OPEN' stage (e.g., 'qualified', 'negotiation') to gather all open deals, following `next_cursor` until null.",
-      "Iterate through all collected deals.",
-      "For each deal, call `crm.get_deal` to retrieve its full details.",
-      "For each deal, call `crm.get_notes` to retrieve all associated notes.",
-      "If a deal has an `owner` ID, call `crm.get_owner` with the `owner_id` to get the owner's name and check if the owner is active.",
-      "Determine if a deal is 'at risk' based on `health` status, relevant information found in `crm.get_notes`, or if the owner is inactive.",
-      "If a deal is identified as 'at risk' and has no valid owner (null owner ID or inactive owner), assign 'UNASSIGNED' as the owner, otherwise use the retrieved owner name.",
-      "Compile the report with deal ID, owner name, and the reason(s) for being at risk."
+      "list_deals with no filter and follow next_cursor until null",
+      "list_owners once",
+      "get_notes for each open deal",
+      "flag health R, blocking notes, inactive owners",
+      "report"
     ],
     "tools": [
       "crm.list_deals",
-      "crm.get_deal",
-      "crm.get_notes",
-      "crm.get_owner"
+      "crm.list_owners",
+      "crm.get_notes"
     ],
     "servers": [
       "crm"
     ],
     "family": "crm_at_risk",
     "status": "promoted",
-    "proposed_run": "crm_at_risk-r05",
-    "version": 3,
-    "wins": 0,
-    "uses": 2,
+    "proposed_run": "crm_at_risk-r01",
+    "version": 4,
+    "wins": 1,
+    "uses": 3,
     "promoted_run": "crm_at_risk-r04"
   },
   {

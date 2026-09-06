@@ -1,10 +1,7 @@
 {
   "crm_at_risk@crm": {
     "active": "When determining 'at risk' status, consider deals with `health: 'R'`, deals with notes indicating risk (e.g., 'budget freeze'), AND deals whose owner is inactive (check `crm.get_owner` for `active: false`). If an owner is inactive, the deal is 'UNASSIGNED'. Ensure `crm.get_owner` is called for every deal with an owner ID to get the name and check activity status.",
-    "candidate": {
-      "text": "When determining 'at risk' status, consider deals with `health: 'R'`, deals with notes indicating risk (e.g., 'budget freeze'), AND deals whose owner is inactive (check `crm.get_owner` for `active: false`). If an owner is inactive, the deal is 'UNASSIGNED'. Ensure `crm.get_owner` is called for every deal with an owner ID to get the name and check activity status.",
-      "run": "crm_at_risk-r05"
-    },
+    "candidate": null,
     "history": [
       {
         "text": "To find 'OPEN' deals, filter for stages like 'qualified' or 'negotiation'. 'At-risk' deals are those with `health: 'R'`. Remember to call `crm.get_owner` for each deal's owner_id.",
@@ -29,6 +26,12 @@
         "run": "crm_at_risk-r04",
         "kept": true,
         "resolved_run": "crm_at_risk-r05"
+      },
+      {
+        "text": "When determining 'at risk' status, consider deals with `health: 'R'`, deals with notes indicating risk (e.g., 'budget freeze'), AND deals whose owner is inactive (check `crm.get_owner` for `active: false`). If an owner is inactive, the deal is 'UNASSIGNED'. Ensure `crm.get_owner` is called for every deal with an owner ID to get the name and check activity status.",
+        "run": "crm_at_risk-r05",
+        "kept": true,
+        "resolved_run": "crm_at_risk-r01"
       }
     ],
     "active_before_candidate": "The `health: 'R'` rule is insufficient for identifying all at-risk deals. For each deal, you MUST call `crm.get_deal` AND `crm.get_notes` to determine its full 'at risk' status and the reason. Only query `crm.list_deals` with known valid stages like 'qualified' and 'negotiation'; 'prospecting' is not a valid stage."

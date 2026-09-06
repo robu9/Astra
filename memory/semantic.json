@@ -730,5 +730,65 @@
       "day",
       "days"
     ]
+  },
+  {
+    "fact": "Deal field health is a colour code: G green, A amber, R red; R means the deal is at risk",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "\"health\": \"R\"",
+    "confidence": 0.8,
+    "first_run": "crm_at_risk-r01",
+    "last_seen_run": "crm_at_risk-r01",
+    "seen": 1,
+    "tags": [
+      "amber",
+      "code",
+      "colour",
+      "deal",
+      "field",
+      "green",
+      "health",
+      "means"
+    ]
+  },
+  {
+    "fact": "Notes mentioning 'PO pending' or 'budget freeze' mean the deal is at risk even when health is green; fetch notes with crm.get_notes for every open deal",
+    "server": "crm",
+    "source_tool": "crm.get_notes",
+    "evidence": "PO pending",
+    "confidence": 0.8,
+    "first_run": "crm_at_risk-r01",
+    "last_seen_run": "crm_at_risk-r01",
+    "seen": 1,
+    "tags": [
+      "budget",
+      "crm",
+      "deal",
+      "even",
+      "fetch",
+      "freeze",
+      "get_notes",
+      "green"
+    ]
+  },
+  {
+    "fact": "Owners with active=false have left; their open deals are at risk and owner must be reported as UNASSIGNED",
+    "server": "crm",
+    "source_tool": "crm.list_owners",
+    "evidence": "\"active\": false",
+    "confidence": 0.8,
+    "first_run": "crm_at_risk-r01",
+    "last_seen_run": "crm_at_risk-r01",
+    "seen": 1,
+    "tags": [
+      "active",
+      "deals",
+      "false",
+      "have",
+      "left",
+      "must",
+      "open",
+      "owner"
+    ]
   }
 ]

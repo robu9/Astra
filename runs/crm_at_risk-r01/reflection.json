@@ -1,12 +1,16 @@
 {
  "facts_new": 3,
  "conventions_new": 2,
- "skill": null,
- "prompt_patch": true,
+ "skill": {
+  "name": "crm at-risk report",
+  "status": "promoted",
+  "version": 4
+ },
+ "prompt_patch": false,
  "facts_demoted": 0,
- "cost_usd": 0.0047261000000000004,
- "latency_s": 8.445026700006565,
- "model": "gemini-2.5-flash",
- "tokens": 3749,
- "what_went_wrong": "The agent used an invalid stage name 'OPEN' and failed to correctly identify 'at-risk' deals based on the 'health' field and 'OPEN' stages."
+ "cost_usd": 0.0004021,
+ "latency_s": 0.012713625000000006,
+ "model": "mock-fast",
+ "tokens": 3010,
+ "what_went_wrong": ""
 }
