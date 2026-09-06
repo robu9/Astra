@@ -34,16 +34,18 @@
   },
   "crm.list_deals": {
     "description": "List deals. Paginated: pass the returned next_cursor to get the next page. Optional stage filter.",
-    "calls": 7,
-    "ok": 6,
+    "calls": 8,
+    "ok": 7,
     "errors": 1,
-    "latency_total": 0.0063,
+    "latency_total": 0.0067,
     "error_signatures": {
       "invalid stage '*'": 1
     },
     "conventions": [
       "The 'stage' argument requires specific stage names (e.g., 'qualified', 'negotiation') rather than general terms like 'OPEN'.",
-      "Pagination is handled by passing the 'next_cursor' value from a previous response as the 'cursor' argument in subsequent calls until 'next_cursor' is null or absent."
+      "Pagination is handled by passing the 'next_cursor' value from a previous response as the 'cursor' argument in subsequent calls until 'next_cursor' is null or absent.",
+      "The 'owner' field in the response is an ID (e.g., 'u_08') and requires crm.get_owner to resolve to a name.",
+      "The 'health' field is a single character code (e.g., 'G', 'R', 'A')."
     ],
     "probed": true,
     "shape": "object keys=['items', 'next_cursor', 'total']; items[0] keys=['amount', 'company', 'currency', 'health', 'id', 'owner', 'stage']"

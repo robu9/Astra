@@ -24,7 +24,7 @@
     "server": "crm",
     "source_tool": "crm.list_deals",
     "evidence": "Grader feedback: missed deal ids: ['d_0103'] (inspect them: why are they at risk?) and d_0103 has health 'A'",
-    "confidence": 0.8,
+    "confidence": 0.4,
     "first_run": "crm_at_risk-r01",
     "last_seen_run": "crm_at_risk-r01",
     "seen": 1,
@@ -42,10 +42,10 @@
     "server": "crm",
     "source_tool": "crm.list_deals",
     "evidence": "d_0105 and d_0108 have health 'R', which is a strong indicator of risk.",
-    "confidence": 0.9,
+    "confidence": 1.0,
     "first_run": "crm_at_risk-r01",
-    "last_seen_run": "crm_at_risk-r01",
-    "seen": 1,
+    "last_seen_run": "crm_at_risk-r02",
+    "seen": 2,
     "tags": [
       "considered",
       "deals",
@@ -60,10 +60,10 @@
     "server": "crm",
     "source_tool": "crm.list_deals",
     "evidence": "Grader feedback: missed deal ids: ['d_0103'] (inspect them: why are they at risk?) and d_0103 has stage 'qualified'",
-    "confidence": 0.9,
+    "confidence": 1.0,
     "first_run": "crm_at_risk-r01",
-    "last_seen_run": "crm_at_risk-r01",
-    "seen": 1,
+    "last_seen_run": "crm_at_risk-r02",
+    "seen": 2,
     "tags": [
       "deal",
       "open",
@@ -77,16 +77,75 @@
     "server": "crm",
     "source_tool": "crm.list_deals",
     "evidence": "Grader feedback: missed deal ids: ['d_0109'] (inspect them: why are they at risk?) and d_0109 has stage 'negotiation'",
-    "confidence": 0.9,
+    "confidence": 1.0,
     "first_run": "crm_at_risk-r01",
-    "last_seen_run": "crm_at_risk-r01",
-    "seen": 1,
+    "last_seen_run": "crm_at_risk-r02",
+    "seen": 2,
     "tags": [
       "deal",
       "negotiation",
       "open",
       "represents",
       "stage"
+    ]
+  },
+  {
+    "fact": "Deals with 'health' status 'A' (Amber) are NOT considered at risk.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "not actually at risk: ['d_0202'] (health was Amber)",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r02",
+    "last_seen_run": "crm_at_risk-r02",
+    "seen": 1,
+    "tags": [
+      "amber",
+      "considered",
+      "deals",
+      "health",
+      "not",
+      "risk",
+      "status"
+    ]
+  },
+  {
+    "fact": "The 'stage' argument for crm.list_deals requires specific values; 'OPEN' is not accepted directly.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "MEMORY THE ACTOR HAD: \"The 'stage' argument for crm.list_deals does not accept 'OPEN' as a valid value\"",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r02",
+    "last_seen_run": "crm_at_risk-r02",
+    "seen": 1,
+    "tags": [
+      "accepted",
+      "argument",
+      "crm",
+      "directly",
+      "list_deals",
+      "not",
+      "open",
+      "requires"
+    ]
+  },
+  {
+    "fact": "The full list of 'OPEN' deal stages is not limited to 'qualified' and 'negotiation'; other stages must be checked.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "missed deal ids: ['d_0203', 'd_0204', 'd_0207', 'd_0208', 'd_0211', 'd_0215']",
+    "confidence": 0.8,
+    "first_run": "crm_at_risk-r02",
+    "last_seen_run": "crm_at_risk-r02",
+    "seen": 1,
+    "tags": [
+      "checked",
+      "deal",
+      "full",
+      "limited",
+      "must",
+      "negotiation",
+      "not",
+      "open"
     ]
   }
 ]
