@@ -1,1 +1,92 @@
-[]
+[
+  {
+    "fact": "The 'stage' argument for crm.list_deals does not accept 'OPEN' as a valid value; specific open stages like 'qualified' or 'negotiation' must be used.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "[1] crm.list_deals({\"stage\": \"OPEN\"}) -> ERROR: ERROR: invalid stage 'OPEN'",
+    "confidence": 1.0,
+    "first_run": "crm_at_risk-r01",
+    "last_seen_run": "crm_at_risk-r01",
+    "seen": 1,
+    "tags": [
+      "accept",
+      "argument",
+      "crm",
+      "does",
+      "like",
+      "list_deals",
+      "must",
+      "negotiation"
+    ]
+  },
+  {
+    "fact": "Deals with 'health' status 'A' (Amber) are considered at risk.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "Grader feedback: missed deal ids: ['d_0103'] (inspect them: why are they at risk?) and d_0103 has health 'A'",
+    "confidence": 0.8,
+    "first_run": "crm_at_risk-r01",
+    "last_seen_run": "crm_at_risk-r01",
+    "seen": 1,
+    "tags": [
+      "amber",
+      "considered",
+      "deals",
+      "health",
+      "risk",
+      "status"
+    ]
+  },
+  {
+    "fact": "Deals with 'health' status 'R' (Red) are considered at risk.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "d_0105 and d_0108 have health 'R', which is a strong indicator of risk.",
+    "confidence": 0.9,
+    "first_run": "crm_at_risk-r01",
+    "last_seen_run": "crm_at_risk-r01",
+    "seen": 1,
+    "tags": [
+      "considered",
+      "deals",
+      "health",
+      "red",
+      "risk",
+      "status"
+    ]
+  },
+  {
+    "fact": "The 'qualified' stage represents an OPEN deal.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "Grader feedback: missed deal ids: ['d_0103'] (inspect them: why are they at risk?) and d_0103 has stage 'qualified'",
+    "confidence": 0.9,
+    "first_run": "crm_at_risk-r01",
+    "last_seen_run": "crm_at_risk-r01",
+    "seen": 1,
+    "tags": [
+      "deal",
+      "open",
+      "qualified",
+      "represents",
+      "stage"
+    ]
+  },
+  {
+    "fact": "The 'negotiation' stage represents an OPEN deal.",
+    "server": "crm",
+    "source_tool": "crm.list_deals",
+    "evidence": "Grader feedback: missed deal ids: ['d_0109'] (inspect them: why are they at risk?) and d_0109 has stage 'negotiation'",
+    "confidence": 0.9,
+    "first_run": "crm_at_risk-r01",
+    "last_seen_run": "crm_at_risk-r01",
+    "seen": 1,
+    "tags": [
+      "deal",
+      "negotiation",
+      "open",
+      "represents",
+      "stage"
+    ]
+  }
+]

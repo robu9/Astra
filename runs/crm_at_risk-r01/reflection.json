@@ -1,0 +1,12 @@
+{
+ "facts_new": 5,
+ "conventions_new": 2,
+ "skill": null,
+ "prompt_patch": true,
+ "facts_demoted": 0,
+ "cost_usd": 0.005750600000000001,
+ "latency_s": 9.079315667000174,
+ "model": "gemini-2.5-flash",
+ "tokens": 4480,
+ "what_went_wrong": "The agent failed to correctly identify 'OPEN' stages and 'at risk' deals based on CRM signals, missing two deals."
+}

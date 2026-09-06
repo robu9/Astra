@@ -1,1 +1,2 @@
 run_id	family	servers	seed	mode	model	quality	success	tool_calls	tool_errors	cached_calls	llm_tokens	cost_usd	reflect_cost_usd	latency_s	facts	skills_promoted	skills_candidate	tools_known	kept	what_went_wrong
+crm_at_risk-r01	crm_at_risk	crm	1	novel	gemini-2.5-flash	0.0	False	7	1	1	18340	0.01406	0.005751	31.481	5	0	0	1	n/a	The agent failed to correctly identify 'OPEN' stages and 'at risk' deals based on CRM signals, missing two deals.

@@ -1,1 +1,11 @@
-{}
+{
+  "crm_at_risk@crm": {
+    "active": "To identify 'OPEN' deals, consider stages like 'qualified' and 'negotiation'. 'At risk' deals are indicated by 'health' status 'A' or 'R'. Remember to paginate through all results from crm.list_deals and use crm.get_owner to resolve owner IDs.",
+    "candidate": {
+      "text": "To identify 'OPEN' deals, consider stages like 'qualified' and 'negotiation'. 'At risk' deals are indicated by 'health' status 'A' or 'R'. Remember to paginate through all results from crm.list_deals and use crm.get_owner to resolve owner IDs.",
+      "run": "crm_at_risk-r01"
+    },
+    "history": [],
+    "active_before_candidate": ""
+  }
+}

@@ -1,1 +1,62 @@
-{}
+{
+  "crm.get_deal": {
+    "description": "Get one deal by id.",
+    "calls": 0,
+    "ok": 0,
+    "errors": 0,
+    "latency_total": 0.0,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "crm.get_notes": {
+    "description": "Get notes for a deal. Notes are free text written by sales reps.",
+    "calls": 0,
+    "ok": 0,
+    "errors": 0,
+    "latency_total": 0.0,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "crm.get_owner": {
+    "description": "Get one owner by id.",
+    "calls": 0,
+    "ok": 0,
+    "errors": 0,
+    "latency_total": 0.0,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": false,
+    "shape": null
+  },
+  "crm.list_deals": {
+    "description": "List deals. Paginated: pass the returned next_cursor to get the next page. Optional stage filter.",
+    "calls": 7,
+    "ok": 6,
+    "errors": 1,
+    "latency_total": 0.0063,
+    "error_signatures": {
+      "invalid stage '*'": 1
+    },
+    "conventions": [
+      "The 'stage' argument requires specific stage names (e.g., 'qualified', 'negotiation') rather than general terms like 'OPEN'.",
+      "Pagination is handled by passing the 'next_cursor' value from a previous response as the 'cursor' argument in subsequent calls until 'next_cursor' is null or absent."
+    ],
+    "probed": true,
+    "shape": "object keys=['items', 'next_cursor', 'total']; items[0] keys=['amount', 'company', 'currency', 'health', 'id', 'owner', 'stage']"
+  },
+  "crm.list_owners": {
+    "description": "List deal owners (sales reps).",
+    "calls": 1,
+    "ok": 1,
+    "errors": 0,
+    "latency_total": 0.0002,
+    "error_signatures": {},
+    "conventions": [],
+    "probed": true,
+    "shape": "object keys=['owners']"
+  }
+}
