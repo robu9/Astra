@@ -181,7 +181,7 @@ Nothing in this loop references CRM, tracker, GitHub, or any other app.
 
 | Store | File | Entry | Retrieval |
 | --- | --- | --- | --- |
-| Episodic | `memory/episodic.jsonl` | run id, family, servers, quality, success, calls, errors, cost, mode, what went wrong | last 3 for same family ∩ servers |
+| Episodic | `memory/episodic.jsonl` | run id, family, servers, quality, success, calls, errors, cost, mode, what went wrong | last 3 for the exact same family and server set |
 | Semantic | `memory/semantic.json` | fact, server (or `null` = general lesson), source tool, evidence quote, confidence, first/last run, seen count, tags | score = confidence × (1 + 0.4 × keyword overlap) + bonus for matching server; top 12; facts from other servers are excluded |
 | Procedural | `memory/skills.json` | name, when, steps[], tools[], servers, family, status `candidate/promoted/rejected`, version, wins/uses | skills whose servers ⊆ attached servers and whose family or `when` matches |
 | Tool model | `memory/tool_model.json` | per tool: calls, ok, errors, latency total, error signatures, conventions[], probed, shape | injected as `learned:` notes under each tool in the prompt; drives the `known tools` ratio in the controller |
@@ -345,7 +345,7 @@ AO usage was mandatory and is 25 % of the score. AO played two roles.
 
 Reviews and fixes (e.g. the `@tool` schema leaking `self`, observation truncation hiding `next_cursor`, skills being demoted back to candidate on re-proposal) were routed back to the owning session.
 
-**Role 2 — run plane.** `python3 -m astra ao-run crm_at_risk --runs 5` creates one AO worker and sends it five sequential learning turns. Waiting between turns guarantees that run N+1 sees run N's committed memory. The worker follows the `learning-run` skill (`.agents/skills/learning-run/SKILL.md`), commits `memory/`, `runs/`, `scoreboard/data.js`, and reports what Astra learned. The AO transcript shows the learning history, and `ao preview scoreboard/index.html` shows the curves beside it.
+**Role 2 — run plane.** `python3 -m astra ao-run crm_at_risk --runs 5` creates one AO worker and sends it five sequential learning turns. Waiting between turns guarantees that run N+1 sees run N's committed memory. Before continuing, the controller verifies that the expected result, trace, reflection, memory and scoreboard were committed and that the exact commit reached the AO branch on `origin`. The worker follows the `learning-run` skill (`.agents/skills/learning-run/SKILL.md`) and reports what Astra learned. The AO transcript shows the learning history, and `ao preview scoreboard/index.html` shows the curves beside it.
 
 `AGENTS.md` tells any AO worker the rules (keep Astra tool-agnostic, never leak rules through graders, never hand-edit memory). The demo video shows the AO dashboard with the session count, a run-1 vs run-N comparison, the memory files growing, and a second MCP attached with no code change.
 

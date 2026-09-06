@@ -11,11 +11,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shlex
 import shutil
 from pathlib import Path
 
 from astra.engine import Engine, RESULT_COLS
+from astra.safe_io import atomic_write_text, exclusive_paths
 from astra.tasks import FAMILIES
 
 # Tool-name prefixes hidden from the agent unless --allow-writes is given (external MCPs are live systems).
@@ -86,7 +88,8 @@ def cmd_memory(a):
 
 def cmd_scoreboard(a):
     from astra.scoreboard import build
-    p = build(a.runs, a.memory)
+    with exclusive_paths([Path(a.memory), Path(a.runs)], timeout=3600):
+        p = build(a.runs, a.memory)
     print(f"wrote {p}. Open scoreboard/index.html (or `ao preview scoreboard/index.html` inside an AO session).")
 
 
@@ -99,13 +102,17 @@ def cmd_ao_run(a):
                          % __import__("os").environ.get("AO_PORT", "3001"))
     jobs = [(fam, a.seed + i) for fam in a.family for i in range(a.runs_n)]
     first_family, first_seed = jobs[0]
-    sid = ao.spawn(worker_prompt(first_family, first_seed, a.transport), name="astra learning loop")
+    branch = a.ao_branch or f"learn/astra-loop-{__import__('time').strftime('%Y%m%d-%H%M%S')}-{os.getpid()}"
+    previous_head = ao.branch_head(branch)
+    sid = ao.spawn(worker_prompt(first_family, first_seed, a.transport), name="astra learning loop", branch=branch)
     print(f"spawned AO worker {sid} for {first_family} seed {first_seed}")
     ao.wait_until_idle(sid, timeout=a.ao_timeout, poll=a.ao_poll)
+    previous_head = ao.verify_iteration(branch, first_family, first_seed, previous_head)
     for fam, seed in jobs[1:]:
         ao.send(sid, worker_prompt(fam, seed, a.transport, followup=True))
         print(f"continued AO worker {sid} for {fam} seed {seed}")
         ao.wait_until_idle(sid, timeout=a.ao_timeout, poll=a.ao_poll)
+        previous_head = ao.verify_iteration(branch, fam, seed, previous_head)
 
 
 def cmd_reset(a):
@@ -114,16 +121,17 @@ def cmd_reset(a):
     runs_root = _safe_reset_path(a.runs)
     if memory_root == runs_root or memory_root.is_relative_to(runs_root) or runs_root.is_relative_to(memory_root):
         raise SystemExit("memory and runs reset paths must be separate, non-nested directories")
-    Memory(memory_root).wipe()
-    runs_root.mkdir(parents=True, exist_ok=True)
-    for p in runs_root.iterdir():
-        if p.is_dir() and not p.is_symlink():
-            shutil.rmtree(p)
-        else:
-            p.unlink()
-    (runs_root / "results.tsv").write_text("\t".join(RESULT_COLS) + "\n", encoding="utf-8")
-    from astra.scoreboard import build
-    build(str(runs_root), str(memory_root))
+    with exclusive_paths([memory_root, runs_root], timeout=3600):
+        Memory(memory_root).wipe()
+        runs_root.mkdir(parents=True, exist_ok=True)
+        for p in runs_root.iterdir():
+            if p.is_dir() and not p.is_symlink():
+                shutil.rmtree(p)
+            else:
+                p.unlink()
+        atomic_write_text(runs_root / "results.tsv", "\t".join(RESULT_COLS) + "\n")
+        from astra.scoreboard import build
+        build(str(runs_root), str(memory_root))
     print("memory and runs wiped")
 
 
@@ -136,15 +144,16 @@ def _safe_reset_path(value: str) -> Path:
 
 
 def _summary(runs_root: str, memory_root: str):
-    tsv = Path(runs_root) / "results.tsv"
-    if not tsv.exists():
-        return
-    try:
-        from astra.scoreboard import build
-        build(runs_root, memory_root)
-    except Exception:
-        pass
-    rows = [l.split("\t") for l in tsv.read_text(encoding="utf-8").splitlines() if l.strip()]
+    with exclusive_paths([Path(memory_root), Path(runs_root)], timeout=3600):
+        tsv = Path(runs_root) / "results.tsv"
+        if not tsv.exists():
+            return
+        try:
+            from astra.scoreboard import build
+            build(runs_root, memory_root)
+        except Exception:
+            pass
+        rows = [l.split("\t") for l in tsv.read_text(encoding="utf-8").splitlines() if l.strip()]
     head, body = rows[0], rows[1:]
     ix = {c: i for i, c in enumerate(head)}
     print("\n" + "-" * 100)
@@ -188,6 +197,7 @@ def main(argv=None):
     p.add_argument("--transport", choices=["inprocess", "mcp"], default="inprocess")
     p.add_argument("--ao-timeout", type=float, default=1800, help="seconds to wait for each AO iteration")
     p.add_argument("--ao-poll", type=float, default=5, help="AO status polling interval")
+    p.add_argument("--ao-branch", help="branch for verified AO artifacts (default: unique learn/astra-loop-...)")
     p.set_defaults(fn=cmd_ao_run)
     sub.add_parser("scoreboard").set_defaults(fn=cmd_scoreboard)
     sub.add_parser("memory").set_defaults(fn=cmd_memory)

@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from astra.memory import Memory
+from astra.safe_io import atomic_write_text
 
 
 def build(runs_root: str = "runs", memory_root: str = "memory", out_dir: str = "scoreboard") -> Path:
@@ -34,6 +35,6 @@ def build(runs_root: str = "runs", memory_root: str = "memory", out_dir: str = "
     }
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    (out / "data.js").write_text("window.ASTRA_DATA = " + json.dumps({"runs": rows, "memory": mem}, default=str) + ";\n",
-                                 encoding="utf-8")
+    atomic_write_text(out / "data.js",
+                      "window.ASTRA_DATA = " + json.dumps({"runs": rows, "memory": mem}, default=str) + ";\n")
     return out / "data.js"

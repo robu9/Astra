@@ -20,6 +20,7 @@ from astra.gateway import ToolGateway
 from astra.llm import make_llm
 from astra.memory import Memory
 from astra.reflector import Reflector
+from astra.safe_io import atomic_write_text, exclusive_paths
 from astra.tasks import FAMILIES, TaskFamily, fixture_for
 from astra.tools.base import ToolServer
 from astra.tools.mcp_stdio import MCPStdioServer
@@ -61,6 +62,18 @@ class Engine:
     # --- one run ------------------------------------------------------------------------------------------------
     def run_once(self, family_name: str, task: str, answer_schema: dict, servers: list[ToolServer], seed: int,
                  grader=None, run_id: str | None = None, deny: tuple[str, ...] = ()) -> RunResult:
+        with exclusive_paths([self.memory.root, self.runs_root], timeout=3600):
+            # Another process may have updated disk while this Engine waited.
+            # Rebind every stateful component to the freshly loaded stores.
+            self.memory = Memory(self.memory.root)
+            self.gateway = ToolGateway(self.memory)
+            self.controller = Controller(self.memory, self.models)
+            self.actor = Actor(self.llm, self.gateway, self.memory)
+            self.reflector = Reflector(self.llm, self.gateway, self.memory)
+            return self._run_once_locked(family_name, task, answer_schema, servers, seed, grader, run_id, deny)
+
+    def _run_once_locked(self, family_name: str, task: str, answer_schema: dict, servers: list[ToolServer], seed: int,
+                         grader=None, run_id: str | None = None, deny: tuple[str, ...] = ()) -> RunResult:
         run_id = self._unique_run_id(run_id or f"{family_name}-{int(time.time())}-{seed}")
         names: list[str] = []
         try:
@@ -153,13 +166,13 @@ class Engine:
     def _persist(self, run_id: str, trace: dict, reflection: dict, metrics: dict) -> None:
         d = self.runs_root / run_id
         d.mkdir(parents=True, exist_ok=True)
-        (d / "trace.json").write_text(json.dumps(trace, indent=1, default=str), encoding="utf-8")
-        (d / "reflection.json").write_text(json.dumps(reflection, indent=1, default=str), encoding="utf-8")
+        atomic_write_text(d / "trace.json", json.dumps(trace, indent=1, default=str))
+        atomic_write_text(d / "reflection.json", json.dumps(reflection, indent=1, default=str))
         tsv = self.runs_root / "results.tsv"
         if not tsv.exists():
-            tsv.write_text("\t".join(RESULT_COLS) + "\n", encoding="utf-8")
-        with tsv.open("a", encoding="utf-8") as f:
-            f.write("\t".join(str(metrics.get(c, "")) for c in RESULT_COLS) + "\n")
+            atomic_write_text(tsv, "\t".join(RESULT_COLS) + "\n")
+        existing = tsv.read_text(encoding="utf-8")
+        atomic_write_text(tsv, existing + "\t".join(str(metrics.get(c, "")) for c in RESULT_COLS) + "\n")
 
     # --- families on fixtures -----------------------------------------------------------------------------------------
     def run_family(self, family_name: str, runs: int = 5, start_seed: int = 1, transport: str = "inprocess") -> list[RunResult]:

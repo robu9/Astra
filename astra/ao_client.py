@@ -44,7 +44,7 @@ class AOClient:
             return json.loads(raw) if raw else {}
 
     # --- operations -----------------------------------------------------------------------------------------------
-    def spawn(self, prompt: str, name: str | None = None) -> str:
+    def spawn(self, prompt: str, name: str | None = None, branch: str | None = None) -> str:
         """Start one AO worker with an inline prompt. Returns the session id (or raw output when parsing fails)."""
         if self.cli:
             cmd = [self.cli, "spawn", "--prompt", prompt[:4000].replace("\n", " ")]
@@ -54,6 +54,8 @@ class AOClient:
                 cmd += ["--agent", self.agent]
             if name:
                 cmd += ["--name", name]
+            if branch:
+                cmd += ["--branch", branch]
             out = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
             if out.returncode != 0:
                 raise RuntimeError(f"ao spawn failed: {out.stderr.strip() or out.stdout.strip()}")
@@ -71,7 +73,8 @@ class AOClient:
                 return ids[-1]
             return text
         body = {"prompt": prompt, **({"projectId": self.project} if self.project else {}),
-                **({"agent": self.agent} if self.agent else {}), **({"name": name} if name else {})}
+                **({"agent": self.agent} if self.agent else {}), **({"name": name} if name else {}),
+                **({"branch": branch} if branch else {})}
         res = self._http("POST", "/sessions", body)
         return str(res.get("id") or res.get("session", {}).get("id") or res)
 
@@ -129,6 +132,40 @@ class AOClient:
             time.sleep(max(0.2, poll))
         raise TimeoutError(f"AO session {session_id} did not become idle within {timeout:.0f}s")
 
+    @staticmethod
+    def _git(args: list[str], check: bool = True) -> subprocess.CompletedProcess:
+        out = subprocess.run(["git", *args], capture_output=True, text=True, timeout=60)
+        if check and out.returncode != 0:
+            raise RuntimeError(f"git {' '.join(args)} failed: {out.stderr.strip() or out.stdout.strip()}")
+        return out
+
+    def branch_head(self, branch: str) -> str | None:
+        out = self._git(["rev-parse", "--verify", f"refs/heads/{branch}"], check=False)
+        return out.stdout.strip() if out.returncode == 0 else None
+
+    def verify_iteration(self, branch: str, family: str, seed: int, previous_head: str | None) -> str:
+        """Prove the AO turn committed complete artifacts and pushed that exact commit."""
+        head = self.branch_head(branch)
+        if not head or head == previous_head:
+            raise RuntimeError(f"AO worker did not create a new commit on {branch}")
+        results = self._git(["show", f"{head}:runs/results.tsv"]).stdout.splitlines()
+        if len(results) < 2:
+            raise RuntimeError("AO worker commit has no result row")
+        columns = results[0].split("\t")
+        row = dict(zip(columns, results[-1].split("\t")))
+        if row.get("family") != family or row.get("seed") != str(seed):
+            raise RuntimeError(f"AO worker result mismatch: expected {family} seed {seed}, got {row}")
+        run_id = row.get("run_id", "")
+        required = [f"runs/{run_id}/trace.json", f"runs/{run_id}/reflection.json",
+                    "runs/results.tsv", "scoreboard/data.js", "memory/episodic.jsonl"]
+        for path in required:
+            if self._git(["cat-file", "-e", f"{head}:{path}"], check=False).returncode != 0:
+                raise RuntimeError(f"AO worker commit is missing {path}")
+        remote = self._git(["ls-remote", "--heads", "origin", f"refs/heads/{branch}"]).stdout.split()
+        if not remote or remote[0] != head:
+            raise RuntimeError(f"AO worker commit {head[:10]} was not pushed to origin/{branch}")
+        return head
+
     def sessions(self) -> list[dict]:
         if self.cli:
             out = subprocess.run([self.cli, "session", "ls", "--json"], capture_output=True, text=True, timeout=30)
@@ -153,5 +190,6 @@ def worker_prompt(family: str, seed: int, transport: str = "inprocess", followup
         f"and memory/*.json; summarise in one paragraph what Astra learned "
         f"(new facts, tool conventions, skill status) and how quality/cost/latency moved vs the previous row in runs/results.tsv.\n"
         f"3. `python3 -m astra scoreboard` then commit memory/, runs/results.tsv, the new run directory, and scoreboard/data.js "
-        f"with message 'learn({family}): run r{seed:02d}'. Push. Do not edit agent code."
+        f"with message 'learn({family}): run r{seed:02d}'. Run `git push -u origin HEAD`. If the run, commit, or push "
+        f"fails, stop and report the error. Do not edit agent code."
     )

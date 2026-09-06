@@ -16,6 +16,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+from astra.safe_io import atomic_write_text
+
 STOP = set("the a an and or of to for in on with by from as is are be this that it at into over per all any "
            "each every their its our your list get find show which what who how when where".split())
 
@@ -34,8 +36,7 @@ def _load(path: Path, default):
 
 
 def _save(path: Path, data) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, sort_keys=False, default=str) + "\n", encoding="utf-8")
+    atomic_write_text(path, json.dumps(data, indent=2, sort_keys=False, default=str) + "\n")
 
 
 class EpisodicStore:
@@ -44,8 +45,8 @@ class EpisodicStore:
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
     def append(self, episode: dict) -> None:
-        with self.path.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(episode, default=str) + "\n")
+        existing = self.path.read_text(encoding="utf-8") if self.path.exists() else ""
+        atomic_write_text(self.path, existing + json.dumps(episode, default=str) + "\n")
 
     def all(self) -> list[dict]:
         if not self.path.exists():
@@ -57,7 +58,8 @@ class EpisodicStore:
         return out
 
     def recent(self, family: str, servers: list[str], n: int = 3) -> list[dict]:
-        eps = [e for e in self.all() if e.get("family") == family and set(e.get("servers", [])) & set(servers)]
+        eps = [e for e in self.all()
+               if e.get("family") == family and set(e.get("servers", [])) == set(servers)]
         return eps[-n:]
 
 
